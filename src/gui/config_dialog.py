@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+from pathlib import Path
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
@@ -11,7 +12,6 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
     QHeaderView,
-    QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
@@ -159,7 +159,6 @@ class CourseEditDialog(QDialog):
 
     def _update_slot_visibility(self, course_type: str) -> None:
         # Row 0 always visible; row 1 only for Q types
-        _, row1_widget = self._slot_rows[1][0].parent(), None
         # The second slot row widget is the parent of the second combo pair
         second_wd, _ = self._slot_rows[1]
         second_row_widget = second_wd.parent()
@@ -171,6 +170,9 @@ class CourseEditDialog(QDialog):
     def _on_accept(self) -> None:
         course_id = self._id_edit.text().strip()
         name = self._name_edit.text().strip()
+        if not course_id or not name:
+            QMessageBox.warning(self, "入力エラー", "IDと授業名は必須です。")
+            return
         course_type = self._type_combo.currentText()
 
         slots: list[Slot] = []
@@ -301,7 +303,7 @@ class ConfigDialog(QDialog):
         self,
         school_config: SchoolConfig,
         teacher_config: TeacherConfig,
-        save_path=None,
+        save_path: Path | str | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -310,7 +312,7 @@ class ConfigDialog(QDialog):
         self.teacher_config = copy.deepcopy(teacher_config)
         self.save_path = save_path
 
-        self.setWindowTitle("設定")
+        self.setWindowTitle("CodeWidget 設定")
         self._build_ui()
 
     # ------------------------------------------------------------------
@@ -318,6 +320,7 @@ class ConfigDialog(QDialog):
     # ------------------------------------------------------------------
 
     def _build_ui(self) -> None:
+        self.setMinimumSize(700, 500)
         main_layout = QVBoxLayout(self)
 
         # Tab widget
@@ -450,19 +453,20 @@ class ConfigDialog(QDialog):
 
     def _refresh_preview(self) -> None:
         self.preview_table.setRowCount(0)
-        idx = self.preview_combo.currentIndex()
-        if idx < 0 or idx >= len(self.teacher_config.courses):
+        course_id = self.preview_combo.currentData()
+        if course_id is None:
+            return
+        course = next((c for c in self.teacher_config.courses if c.id == course_id), None)
+        if course is None:
             return
 
-        course = self.teacher_config.courses[idx]
-        course_id = course.id
-
-        base = resolve_course_schedule(course, self.school_config)
-        course_overrides = [
-            ov for ov in self.teacher_config.overrides if ov.course_id == course_id
-        ]
-        scheduled = apply_overrides(base, course_overrides)
-        scheduled_sorted = sorted(scheduled, key=lambda sc: sc.date)
+        try:
+            base = resolve_course_schedule(course, self.school_config)
+            course_overrides = [ov for ov in self.teacher_config.overrides if ov.course_id == course_id]
+            scheduled_sorted = sorted(apply_overrides(base, course_overrides), key=lambda sc: sc.date)
+        except ValueError:
+            self.preview_table.setRowCount(0)
+            return
 
         for sc in scheduled_sorted:
             row = self.preview_table.rowCount()
@@ -494,7 +498,7 @@ class ConfigDialog(QDialog):
 
     def _on_tab_changed(self, index: int) -> None:
         if index == 1:  # 日程プレビュー
-            self._populate_preview_combo()
+            self._refresh_preview()
         elif index == 2:  # 調整
             self._populate_adj_table()
 

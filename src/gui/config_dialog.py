@@ -271,17 +271,13 @@ class RescheduleDialog(QDialog):
         self._session_combo.currentIndexChanged.connect(self._on_session_changed)
         self._form.addRow("対象回:", self._session_combo)
 
-        # Row 2: 元日時 (readonly)
-        self._orig_label = QLabel()
-        self._form.addRow("元日時:", self._orig_label)
-
-        # Row 3: 新日付
+        # Row 2: 新日付
         self._new_date_edit = QDateEdit()
         self._new_date_edit.setCalendarPopup(True)
         self._new_date_edit.setDisplayFormat("yyyy-MM-dd")
         self._form.addRow("新日付:", self._new_date_edit)
 
-        # Row 4: 新時限
+        # Row 3: 新時限
         self._period_combo = QComboBox()
         for p in range(1, 7):
             self._period_combo.addItem(f"{p}限", userData=p)
@@ -289,11 +285,11 @@ class RescheduleDialog(QDialog):
         self._period_combo.currentIndexChanged.connect(self._on_period_changed)
         self._form.addRow("新時限:", self._period_combo)
 
-        # Row 5: 時刻 (shown only when カスタム)
+        # Row 4: 開始時刻 (shown only when カスタム)
         self._time_edit = QLineEdit()
         self._time_edit.setPlaceholderText("HH:MM")
         self._form.addRow("開始時刻:", self._time_edit)
-        self._form.setRowVisible(5, False)
+        self._form.setRowVisible(4, False)
 
         layout.addLayout(self._form)
 
@@ -334,14 +330,12 @@ class RescheduleDialog(QDialog):
         if index < 0 or index >= len(self._sessions):
             return
         sc = self._sessions[index]
-        jp_wd = WEEKDAY_JP.get(sc.weekday, sc.weekday)
-        self._orig_label.setText(f"{sc.date} {jp_wd}{sc.period}限")
         self._new_date_edit.setDate(QDate(sc.date.year, sc.date.month, sc.date.day))
         self._period_combo.setCurrentIndex(sc.period - 1)
 
     def _on_period_changed(self, index: int) -> None:
         is_custom = self._period_combo.itemData(index) is None
-        self._form.setRowVisible(5, is_custom)
+        self._form.setRowVisible(4, is_custom)
 
     def _on_accept(self) -> None:
         session_idx = self._session_combo.currentIndex()
@@ -772,29 +766,36 @@ class ConfigDialog(QDialog):
 
     def _on_check_conflicts(self) -> None:
         from collections import defaultdict
-        from engine.override import apply_overrides
 
-        # Build all sessions for all courses
+        def _start_time(sc: ScheduledClass) -> str:
+            """Return HH:MM start time, normalising period numbers and custom times."""
+            if sc.custom_start:
+                return sc.custom_start
+            period_info = self.school_config.periods.get(str(sc.period))
+            return period_info.start if period_info else str(sc.period)
+
+        # Build all sessions for all courses with overrides applied
         slot_map: dict = defaultdict(list)
         for course in self.teacher_config.courses:
             try:
                 base = resolve_course_schedule(course, self.school_config)
-                overrides = [ov for ov in self.teacher_config.overrides if ov.course_id == course.id]
-                sessions = apply_overrides(base, overrides)
+                course_overrides = [
+                    ov for ov in self.teacher_config.overrides
+                    if ov.course_id == course.id
+                ]
+                sessions = apply_overrides(base, course_overrides)
             except (ValueError, KeyError):
                 continue
             for sc in sessions:
-                key = (sc.date, sc.custom_start if sc.custom_start else sc.period)
-                slot_map[key].append(sc)
+                slot_map[(sc.date, _start_time(sc))].append(sc)
 
         conflicts = {k: v for k, v in slot_map.items() if len(v) > 1}
 
         if conflicts:
             lines = []
-            for (d, period_key), sessions in sorted(conflicts.items()):
-                period_str = period_key if isinstance(period_key, str) else f"{period_key}限"
-                names = "、".join(f"{sc.course_name}（第{sc.session_key}回）" for sc in sessions)
-                lines.append(f"・{d}  {period_str}:  {names}")
+            for (d, t), scs in sorted(conflicts.items()):
+                names = "、".join(f"{sc.course_name}（第{sc.session_key}回）" for sc in scs)
+                lines.append(f"・{d}  {t}:  {names}")
             QMessageBox.warning(self, "衝突検出",
                                 "以下の授業が同じ時間帯に重複しています：\n\n" + "\n".join(lines))
         else:

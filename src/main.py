@@ -1,5 +1,7 @@
+"""main.py — CodeWidget application entry point."""
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -11,8 +13,9 @@ from engine.scheduler import get_active_class, resolve_course_schedule, Schedule
 from gui.attendance_window import AttendanceWindow
 from gui.config_dialog import ConfigDialog
 from gui.tray import TrayIcon
-from models.school_config import load_school_config
+from models.school_config import SchoolConfig, load_school_config
 from models.teacher_config import (
+    TeacherConfig,
     Settings,
     WindowPosition,
     load_teacher_config,
@@ -25,7 +28,8 @@ DEFAULT_TEACHER_CONFIG = Path(__file__).parent.parent / "config" / "邵_teacher_
 TICK_MS = 30_000  # 30 seconds
 
 
-def _build_all_scheduled(teacher_config, school_config) -> list[ScheduledClass]:
+def _build_all_scheduled(teacher_config: TeacherConfig, school_config: SchoolConfig) -> list[ScheduledClass]:
+    """Resolve and apply overrides for all courses in the teacher config."""
     all_sc = []
     for course in teacher_config.courses:
         base = resolve_course_schedule(course, school_config)
@@ -43,8 +47,14 @@ def main():
     # Load configs
     settings = QSettings()
     teacher_path = Path(settings.value("teacher_config_path", str(DEFAULT_TEACHER_CONFIG)))
-    school_config = load_school_config(SCHOOL_CONFIG_PATH)
-    teacher_config = load_teacher_config(teacher_path)
+    try:
+        school_config = load_school_config(SCHOOL_CONFIG_PATH)
+        teacher_config = load_teacher_config(teacher_path)
+    except (FileNotFoundError, json.JSONDecodeError, KeyError) as exc:
+        from PySide6.QtWidgets import QMessageBox
+        QMessageBox.critical(None, "設定ファイルエラー",
+                             f"設定ファイルの読み込みに失敗しました。\n\n{exc}")
+        sys.exit(1)
 
     # Build schedule
     all_scheduled = _build_all_scheduled(teacher_config, school_config)

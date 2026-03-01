@@ -36,21 +36,42 @@ def resolve_course_schedule(
         return []
 
     result: list[ScheduledClass] = []
-    for slot_idx, slot in enumerate(course.slots):
-        wd_dates = semester.weekday_dates.get(slot.weekday, {})
-        for session_key in ct.session_keys:
-            date_str = wd_dates.get(session_key)
-            if date_str is None:
-                continue
-            result.append(ScheduledClass(
-                course_id=course.id,
-                course_name=course.name,
-                date=date.fromisoformat(date_str),
-                weekday=slot.weekday,
-                period=slot.period,
-                session_key=session_key,
-                slot_index=slot_idx,
-            ))
+    if ct.slots_per_week > 1:
+        # Multi-slot weeks (Q courses): iterate weeks × slots so session numbers
+        # are sequential across both slots.  Week 1 → sessions 01,02;
+        # week 2 → sessions 03,04; …; week 7 → sessions 13,14.
+        for week_idx, week_key in enumerate(ct.session_keys):
+            for slot_idx, slot in enumerate(course.slots):
+                wd_dates = semester.weekday_dates.get(slot.weekday, {})
+                date_str = wd_dates.get(week_key)
+                if date_str is None:
+                    continue
+                actual_num = week_idx * ct.slots_per_week + slot_idx + 1
+                result.append(ScheduledClass(
+                    course_id=course.id,
+                    course_name=course.name,
+                    date=date.fromisoformat(date_str),
+                    weekday=slot.weekday,
+                    period=slot.period,
+                    session_key=f"{actual_num:02d}",
+                    slot_index=slot_idx,
+                ))
+    else:
+        for slot_idx, slot in enumerate(course.slots):
+            wd_dates = semester.weekday_dates.get(slot.weekday, {})
+            for session_key in ct.session_keys:
+                date_str = wd_dates.get(session_key)
+                if date_str is None:
+                    continue
+                result.append(ScheduledClass(
+                    course_id=course.id,
+                    course_name=course.name,
+                    date=date.fromisoformat(date_str),
+                    weekday=slot.weekday,
+                    period=slot.period,
+                    session_key=session_key,
+                    slot_index=slot_idx,
+                ))
 
     return result
 

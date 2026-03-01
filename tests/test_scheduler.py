@@ -42,6 +42,20 @@ class TestSessionCount:
         course = next(c for c in teacher.courses if c.id == "RD010001E3")
         assert len(resolve_course_schedule(course, school)) == 14
 
+    def test_q1_session_keys_sequential(self, school, teacher):
+        # Session keys for Q1 must be 01..14 (not 01..07 duplicated per slot)
+        course = next(c for c in teacher.courses if c.id == "RD010001E3")
+        scheduled = sorted(resolve_course_schedule(course, school), key=lambda s: (s.date, s.period))
+        keys = [s.session_key for s in scheduled]
+        assert keys == [f"{n:02d}" for n in range(1, 15)]
+
+    def test_q1_week1_slot0_session01_slot1_session02(self, school, teacher):
+        # In week 1: Wednesday (slot 0) → 01, Friday (slot 1) → 02
+        course = next(c for c in teacher.courses if c.id == "RD010001E3")
+        scheduled = sorted(resolve_course_schedule(course, school), key=lambda s: (s.date, s.period))
+        assert scheduled[0].session_key == "01" and scheduled[0].slot_index == 0
+        assert scheduled[1].session_key == "02" and scheduled[1].slot_index == 1
+
     def test_intensive_returns_empty(self, school):
         from models.teacher_config import Course, Slot
         intensive = Course(id="x", name="x", course_type="intensive", slots=[])

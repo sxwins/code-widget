@@ -88,14 +88,39 @@ Phase 4 完成後に追加した機能（38 tests passing）:
 - 衝突検出ボタン（時間窓オーバーラップ判定）
 - 調整ダイアログ: 元日時行削除、開始時刻ラベル
 
+## Phase 5 完成（2026-03-02）
+
+- uv add --dev pyinstaller pillow
+- 創建 CodeWidget.spec（onefile/windowed，含 icon + configs）
+- icon.png → icon.ico（Pillow, 16/32/48/256px）
+- main.py: _resource()/_user_data_dir() frozen-mode path helpers
+- main.py: _ensure_user_config() 首次运行自动复制模板
+- icon.py: frozen mode 使用 sys._MEIPASS
+- EXE 构建成功：dist/CodeWidget.exe (45MB)
+- 验证：EXE 启动正常，dist/config/ 自动生成，15 courses + 3 overrides
+
+## Phase 6 验收（2026-03-02）
+
+### 7 条验收标准核查
+| AC | 描述 | 状态 |
+|----|------|------|
+| AC1 | 周几第几限→课程名配置+保存 | ✓ ConfigDialog 课程 tab |
+| AC2 | 按学期识别授课日，标识第几回+预览 | ✓ scheduler + 预览 tab |
+| AC3 | 开课前10分→开课后30分自动显示置顶窗 | ✓ pre_class=10, post_class=30 |
+| AC4 | 可拖动、始终置顶、面积小 | ✓ WindowStaysOnTopHint + mouseMoveEvent |
+| AC5 | 粘贴出勤码，醒目展示 | ✓ 72pt 显示 + 临时码 |
+| AC6 | 超窗口期后自动隐藏 | ✓ _tick() active=None → hide() |
+| AC7 | 预览授课日，停课/补课/调课 CRUD，保存后生效 | ✓ 调整 tab |
+- 38 tests passing
+
 ## 5-Question Reboot Check
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 5: 打包与分发（開始） |
-| Where am I going? | Phase 5: PyInstaller 打包 → Phase 6: 测试与验收 |
+| Where am I? | Phase 6: 测试与验收（in_progress） |
+| Where am I going? | Phase 6 完成 → 项目结束 |
 | What's the goal? | 开发出勤码展示工具：置顶小窗、按课表自动提示、支持调整、打包为独立 exe |
 | What have I learned? | 見 findings.md；完整実装済み、38 tests passing |
-| What have I done? | Phase 1-4 完成 + Phase 4+ 追加機能実装 |
+| What have I done? | Phase 1-5 完成 + 7 AC 全部验证通过 |
 
 ---
 *Update after completing each phase or encountering errors*

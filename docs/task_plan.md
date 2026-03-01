@@ -49,10 +49,10 @@ Phase 6: 测试与验收
 - **Status:** complete
 
 ### Phase 6: 测试与验收
-- [ ] 验证全部 7 条验收标准（requirements.md §12）
-- [ ] 边界测试（跨日期、窗口边界、多课冲突）
+- [x] 验证全部 7 条验收标准（requirements.md §12）
+- [x] 边界测试（跨日期、窗口边界、多课冲突）— 38 tests passing
 - [ ] 文档整理
-- **Status:** pending
+- **Status:** in_progress
 
 ## Key Questions
 1. GUI 框架：PyQt6 还是 PySide6？（授权差异：PyQt6 GPL / PySide6 LGPL）

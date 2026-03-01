@@ -474,6 +474,10 @@ class ConfigDialog(QDialog):
         hh.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         self.courses_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.courses_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.courses_table.setShowGrid(False)
+        self.courses_table.setStyleSheet(
+            "QTableWidget::item:selected { background-color: #BBDEFB; color: black; }"
+        )
         layout.addWidget(self.courses_table)
 
         btn_layout = QHBoxLayout()
@@ -516,19 +520,29 @@ class ConfigDialog(QDialog):
     def _build_adj_tab(self) -> None:
         layout = QVBoxLayout(self._tab_adj)
 
-        self.adj_table = QTableWidget(0, 5)
-        self.adj_table.setHorizontalHeaderLabels(["授業名", "元日付", "新日付", "新時限", "操作"])
+        self.adj_table = QTableWidget(0, 4)
+        self.adj_table.setHorizontalHeaderLabels(["授業名", "元日付", "新日付", "新時限"])
         hh = self.adj_table.horizontalHeader()
         for col in range(4):
             hh.setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
-        hh.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
         self.adj_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.adj_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.adj_table.setShowGrid(False)
+        self.adj_table.setStyleSheet(
+            "QTableWidget::item:selected { background-color: #BBDEFB; color: black; }"
+        )
         layout.addWidget(self.adj_table)
 
         btn_layout = QHBoxLayout()
         btn_add = QPushButton("調整を追加")
+        btn_edit = QPushButton("編集")
+        btn_del = QPushButton("削除")
         btn_add.clicked.connect(self._on_add_adjustment)
+        btn_edit.clicked.connect(self._on_edit_selected_override)
+        btn_del.clicked.connect(self._on_delete_selected_override)
         btn_layout.addWidget(btn_add)
+        btn_layout.addWidget(btn_edit)
+        btn_layout.addWidget(btn_del)
         btn_layout.addStretch()
         layout.addLayout(btn_layout)
 
@@ -549,7 +563,7 @@ class ConfigDialog(QDialog):
 
         # Font size
         self._size_spin = QSpinBox()
-        self._size_spin.setFixedWidth(60)
+        self._size_spin.setFixedWidth(80)
         self._size_spin.setRange(12, 200)
         self._size_spin.setValue(ap.code_font_size)
         form.addRow("サイズ:", self._size_spin)
@@ -588,7 +602,7 @@ class ConfigDialog(QDialog):
 
         # Course font size
         self._course_size_spin = QSpinBox()
-        self._course_size_spin.setFixedWidth(60)
+        self._course_size_spin.setFixedWidth(80)
         self._course_size_spin.setRange(6, 72)
         self._course_size_spin.setValue(ap.course_font_size)
         form.addRow("サイズ:", self._course_size_spin)
@@ -666,7 +680,7 @@ class ConfigDialog(QDialog):
     def _populate_adj_table(self) -> None:
         self.adj_table.setRowCount(0)
         course_map = {c.id: c.name for c in self.teacher_config.courses}
-        for idx, ov in enumerate(self.teacher_config.overrides):
+        for ov in self.teacher_config.overrides:
             row = self.adj_table.rowCount()
             self.adj_table.insertRow(row)
             self.adj_table.setItem(row, 0, QTableWidgetItem(course_map.get(ov.course_id, ov.course_id)))
@@ -683,7 +697,6 @@ class ConfigDialog(QDialog):
             else:
                 period_str = ""
             self.adj_table.setItem(row, 3, QTableWidgetItem(period_str))
-            self.adj_table.setCellWidget(row, 4, self._make_row_buttons(idx))
 
     def _on_generate_codes(self) -> None:
         course_id = self.preview_combo.currentData()
@@ -761,22 +774,8 @@ class ConfigDialog(QDialog):
             self._populate_adj_table()
             self._refresh_preview()
 
-    def _make_row_buttons(self, row: int) -> QWidget:
-        container = QWidget()
-        layout = QHBoxLayout(container)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
-        btn_edit = QPushButton("✏")
-        btn_edit.setFixedSize(26, 22)
-        btn_del = QPushButton("🗑")
-        btn_del.setFixedSize(26, 22)
-        btn_edit.clicked.connect(lambda checked, r=row: self._on_edit_override(r))
-        btn_del.clicked.connect(lambda checked, r=row: self._on_delete_override_at(r))
-        layout.addWidget(btn_edit)
-        layout.addWidget(btn_del)
-        return container
-
-    def _on_edit_override(self, row: int) -> None:
+    def _on_edit_selected_override(self) -> None:
+        row = self.adj_table.currentRow()
         if row < 0 or row >= len(self.teacher_config.overrides):
             return
         ov = self.teacher_config.overrides[row]
@@ -786,7 +785,8 @@ class ConfigDialog(QDialog):
             self._populate_adj_table()
             self._refresh_preview()
 
-    def _on_delete_override_at(self, row: int) -> None:
+    def _on_delete_selected_override(self) -> None:
+        row = self.adj_table.currentRow()
         if row < 0 or row >= len(self.teacher_config.overrides):
             return
         ov = self.teacher_config.overrides[row]

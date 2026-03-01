@@ -1,5 +1,5 @@
 # attendance_window.py — 出勤码展示小窗
-# 特性：始终置顶、可拖动、醒目大字体显示出勤码、支持手动输入/粘贴
+# 特性：始终置顶、可拖动、醒目大字体显示出勤码、右键菜单（入力/クリア/設定）
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
+    QMenu,
     QVBoxLayout,
     QWidget,
 )
@@ -21,6 +21,7 @@ class AttendanceWindow(QWidget):
     """Floating widget that displays attendance code for a scheduled class."""
 
     position_changed = Signal(int, int)
+    open_settings = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         flags = (
@@ -30,7 +31,7 @@ class AttendanceWindow(QWidget):
         )
         super().__init__(parent, flags)
 
-        self.setFixedSize(360, 170)
+        self.setFixedSize(300, 125)
         pal = self.palette()
         pal.setColor(QPalette.ColorRole.Window, QColor("white"))
         self.setPalette(pal)
@@ -69,28 +70,34 @@ class AttendanceWindow(QWidget):
         self.code_edit.setFrame(False)
         self.code_edit.editingFinished.connect(self._on_editing_finished)
 
-        # --- Bottom: buttons ---
-        self.btn_edit = QPushButton("入力 / ペースト")
-        self.btn_clear = QPushButton("クリア")
-
-        self.btn_edit.clicked.connect(self._on_edit)
-        self.btn_clear.clicked.connect(self._on_clear_btn)
-
-        btn_layout = QHBoxLayout()
-        btn_layout.addWidget(self.btn_edit)
-        btn_layout.addWidget(self.btn_clear)
-
-        # --- Main layout ---
+        # --- Main layout (no buttons — use right-click menu) ---
         main_layout = QVBoxLayout(self)
         main_layout.addLayout(top_layout)
         main_layout.addWidget(self.code_edit)
-        main_layout.addLayout(btn_layout)
 
         # Start hidden
         self.hide()
 
     # ------------------------------------------------------------------
-    # Button handlers
+    # Context menu (right-click)
+    # ------------------------------------------------------------------
+
+    def contextMenuEvent(self, event) -> None:
+        menu = QMenu(self)
+        action_input = menu.addAction("入力")
+        action_clear = menu.addAction("クリア")
+        menu.addSeparator()
+        action_settings = menu.addAction("設定")
+        action = menu.exec(event.globalPos())
+        if action == action_input:
+            self._on_edit()
+        elif action == action_clear:
+            self._on_clear_btn()
+        elif action == action_settings:
+            self.open_settings.emit()
+
+    # ------------------------------------------------------------------
+    # Internal helpers
     # ------------------------------------------------------------------
 
     def _on_edit(self) -> None:
@@ -109,10 +116,12 @@ class AttendanceWindow(QWidget):
     # Public API
     # ------------------------------------------------------------------
 
-    def update_class(self, sc: ScheduledClass) -> None:
-        """Populate course name and session key labels. Caller is responsible for show()."""
+    def update_class(self, sc: ScheduledClass, code: str = "") -> None:
+        """Populate course name, session key, and attendance code."""
         self.label_course.setText(sc.course_name)
         self.label_session.setText(f"第{sc.session_key}回")
+        self.code_edit.setText(code)
+        self.code_edit.setReadOnly(True)
 
     def clear_class(self) -> None:
         """Clear all displayed data and hide the window."""

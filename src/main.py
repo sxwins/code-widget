@@ -104,6 +104,10 @@ def main():
         _tick()
 
     tray.open_config.connect(open_config)
+    win.open_settings.connect(open_config)
+
+    def _code_for(sc: ScheduledClass) -> str:
+        return teacher_config.attendance_codes.get(f"{sc.course_id}_{sc.date}", "")
 
     # Toggle window
     def toggle_window():
@@ -111,7 +115,7 @@ def main():
             win.hide()
         else:
             if _last_active[0] is not None:
-                win.update_class(_last_active[0])
+                win.update_class(_last_active[0], _code_for(_last_active[0]))
             win.show()
         tray.update_status(_last_active[0])
 
@@ -124,7 +128,7 @@ def main():
         if active != _last_active[0]:
             _last_active[0] = active
             if active is not None:
-                win.update_class(active)
+                win.update_class(active, _code_for(active))
                 win.show()
             else:
                 win.hide()

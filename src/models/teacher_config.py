@@ -56,6 +56,7 @@ class TeacherConfig:
     window_position: WindowPosition = field(default_factory=WindowPosition)
     settings: Settings = field(default_factory=Settings)
     academic_year: str = ""
+    attendance_codes: dict[str, str] = field(default_factory=dict)  # key: "{course_id}_{date}"
 
 
 def load_teacher_config(path: str | Path) -> TeacherConfig:
@@ -103,6 +104,7 @@ def load_teacher_config(path: str | Path) -> TeacherConfig:
             post_class_minutes=settings_data.get("post_class_minutes", 30),
             standby_on_no_class=settings_data.get("standby_on_no_class", True),
         ),
+        attendance_codes=data.get("attendance_codes", {}),
     )
 
 
@@ -137,6 +139,7 @@ def save_teacher_config(config: TeacherConfig, path: str | Path) -> None:
             })
             for o in config.overrides
         ],
+        "attendance_codes": config.attendance_codes,
         "window_position": {"x": config.window_position.x, "y": config.window_position.y},
         "settings": {
             "pre_class_minutes": config.settings.pre_class_minutes,

@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import copy
-from pathlib import Path
-
+import random
 import re
+from pathlib import Path
 
 from PySide6.QtCore import QDate, Signal
 from PySide6.QtWidgets import (
@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QStyledItemDelegate,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
@@ -43,6 +44,8 @@ WEEKDAY_JP = {
     "Wednesday": "水",
     "Thursday": "木",
     "Friday": "金",
+    "Saturday": "土",
+    "Sunday": "日",
 }
 
 _WEEKDAY_OPTIONS = [
@@ -54,6 +57,15 @@ _WEEKDAY_OPTIONS = [
 ]
 
 _Q_TYPES = {"Q1", "Q2", "Q3", "Q4"}
+
+
+class _CodeColumnDelegate(QStyledItemDelegate):
+    """Allow editing only column 4 (出席コード) in the preview table."""
+
+    def createEditor(self, parent, option, index):
+        if index.column() == 4:
+            return super().createEditor(parent, option, index)
+        return None
 
 
 def _slot_label(slot: Slot) -> str:
@@ -420,9 +432,12 @@ class ConfigDialog(QDialog):
 
         self.courses_table = QTableWidget(0, 5)
         self.courses_table.setHorizontalHeaderLabels(["ID", "授業名", "年度", "種別", "スロット"])
-        self.courses_table.horizontalHeader().setSectionResizeMode(
-            1, QHeaderView.ResizeMode.Stretch
-        )
+        hh = self.courses_table.horizontalHeader()
+        hh.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        hh.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        hh.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        hh.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        hh.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         self.courses_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.courses_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         layout.addWidget(self.courses_table)
@@ -447,13 +462,22 @@ class ConfigDialog(QDialog):
         self.preview_combo.currentIndexChanged.connect(self._refresh_preview)
         layout.addWidget(self.preview_combo)
 
-        self.preview_table = QTableWidget(0, 4)
-        self.preview_table.setHorizontalHeaderLabels(["回", "日付", "曜日", "限"])
+        self.preview_table = QTableWidget(0, 5)
+        self.preview_table.setHorizontalHeaderLabels(["回", "日付", "曜日", "時限", "出席コード"])
         hh = self.preview_table.horizontalHeader()
-        for col in range(4):
+        for col in range(5):
             hh.setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
-        self.preview_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.preview_table.setItemDelegate(_CodeColumnDelegate(self.preview_table))
+        self.preview_table.setEditTriggers(QTableWidget.EditTrigger.DoubleClicked)
+        self.preview_table.itemChanged.connect(self._on_code_changed)
         layout.addWidget(self.preview_table)
+
+        btn_layout = QHBoxLayout()
+        btn_gen = QPushButton("コード生成")
+        btn_gen.clicked.connect(self._on_generate_codes)
+        btn_layout.addWidget(btn_gen)
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
 
     def _build_adj_tab(self) -> None:
         layout = QVBoxLayout(self._tab_adj)
@@ -503,12 +527,15 @@ class ConfigDialog(QDialog):
         self._refresh_preview()
 
     def _refresh_preview(self) -> None:
+        self.preview_table.blockSignals(True)
         self.preview_table.setRowCount(0)
         course_id = self.preview_combo.currentData()
         if course_id is None:
+            self.preview_table.blockSignals(False)
             return
         course = next((c for c in self.teacher_config.courses if c.id == course_id), None)
         if course is None:
+            self.preview_table.blockSignals(False)
             return
 
         try:
@@ -516,17 +543,29 @@ class ConfigDialog(QDialog):
             course_overrides = [ov for ov in self.teacher_config.overrides if ov.course_id == course_id]
             scheduled_sorted = sorted(apply_overrides(base, course_overrides), key=lambda sc: sc.date)
         except ValueError:
-            self.preview_table.setRowCount(0)
+            self.preview_table.blockSignals(False)
             return
 
         for sc in scheduled_sorted:
             row = self.preview_table.rowCount()
             self.preview_table.insertRow(row)
             self.preview_table.setItem(row, 0, QTableWidgetItem(sc.session_key))
-            self.preview_table.setItem(row, 1, QTableWidgetItem(str(sc.date)))
+            date_str = str(sc.date)
+            self.preview_table.setItem(row, 1, QTableWidgetItem(date_str))
             jp_wd = WEEKDAY_JP.get(sc.weekday, sc.weekday)
             self.preview_table.setItem(row, 2, QTableWidgetItem(jp_wd))
-            self.preview_table.setItem(row, 3, QTableWidgetItem(str(sc.period)))
+            if sc.custom_start:
+                h, m = map(int, sc.custom_start.split(":"))
+                total_end = h * 60 + m + 100
+                end_str = f"{total_end // 60:02d}:{total_end % 60:02d}"
+                period_str = f"{sc.custom_start}-{end_str}"
+            else:
+                period_str = str(sc.period)
+            self.preview_table.setItem(row, 3, QTableWidgetItem(period_str))
+            code = self.teacher_config.attendance_codes.get(f"{course_id}_{date_str}", "")
+            self.preview_table.setItem(row, 4, QTableWidgetItem(code))
+
+        self.preview_table.blockSignals(False)
 
     def _populate_adj_table(self) -> None:
         self.adj_table.setRowCount(0)
@@ -545,6 +584,34 @@ class ConfigDialog(QDialog):
             else:
                 period_str = ""
             self.adj_table.setItem(row, 3, QTableWidgetItem(period_str))
+
+    def _on_generate_codes(self) -> None:
+        course_id = self.preview_combo.currentData()
+        if course_id is None:
+            return
+        for row in range(self.preview_table.rowCount()):
+            date_item = self.preview_table.item(row, 1)
+            if date_item is None:
+                continue
+            code = f"{random.randint(0, 9999):04d}"
+            self.teacher_config.attendance_codes[f"{course_id}_{date_item.text()}"] = code
+        self._refresh_preview()
+
+    def _on_code_changed(self, item: QTableWidgetItem) -> None:
+        if item.column() != 4:
+            return
+        date_item = self.preview_table.item(item.row(), 1)
+        if date_item is None:
+            return
+        course_id = self.preview_combo.currentData()
+        if course_id is None:
+            return
+        key = f"{course_id}_{date_item.text()}"
+        code = item.text().strip()
+        if code:
+            self.teacher_config.attendance_codes[key] = code
+        else:
+            self.teacher_config.attendance_codes.pop(key, None)
 
     # ------------------------------------------------------------------
     # Slot handlers

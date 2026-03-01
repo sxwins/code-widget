@@ -72,6 +72,19 @@
 - 月 11/2（学祭片付）、金 10/30（学祭準備）、火 12/22（SDGsフォーラム）
 - 月～金 12/23～1/3前後（年末年始）、月 1/11（成人の日）
 
+### 课程类型（course_types，定义于 school_config.json）
+
+| 类型 | 学期 | 使用回次 | 每周次数 | 槽位数 |
+|------|------|----------|----------|--------|
+| spring | spring_2026 | 01–14 | 1 | 1（单曜日×单限） |
+| autumn | autumn_2026 | 01–14 | 1 | 1（单曜日×单限） |
+| Q1 | spring_2026 | 01–07 | 2 | 2（两曜日×各1限） |
+| Q2 | spring_2026 | 08–14 | 2 | 2（两曜日×各1限） |
+| Q3 | autumn_2026 | 01–07 | 2 | 2（两曜日×各1限） |
+| Q4 | autumn_2026 | 08–14 | 2 | 2（两曜日×各1限） |
+
+全类型均为14次授课（春/秋：14周×1次；Q：7周×2次）。
+
 ### TeacherConfig（个人配置，teacher_config.json）
 ```json
 {
@@ -79,33 +92,49 @@
   "courses": [
     {
       "id": "course_001",
-      "name": "微积分A",
-      "weekday": "Monday",
-      "period": 2
+      "name": "微積分A",
+      "course_type": "spring",
+      "slots": [
+        {"weekday": "Wednesday", "period": 3}
+      ]
+    },
+    {
+      "id": "course_002",
+      "name": "線形代数B",
+      "course_type": "Q1",
+      "slots": [
+        {"weekday": "Wednesday", "period": 2},
+        {"weekday": "Friday",    "period": 3}
+      ]
     }
   ],
   "overrides": [
     {
       "type": "skip",
       "course_id": "course_001",
-      "date": "2026-05-04"
+      "date": "2026-05-13"
     },
     {
       "type": "makeup",
       "course_id": "course_001",
-      "date": "2026-05-09",
+      "date": "2026-05-20",
       "period": 3
     },
     {
       "type": "reschedule",
       "course_id": "course_001",
-      "original_date": "2026-06-01",
-      "original_period": 2,
-      "new_date": "2026-06-03",
+      "original_date": "2026-06-03",
+      "original_period": 3,
+      "new_date": "2026-06-05",
       "new_period": 4
     }
   ],
-  "window_position": {"x": 100, "y": 100}
+  "window_position": {"x": 100, "y": 100},
+  "settings": {
+    "pre_class_minutes": 10,
+    "post_class_minutes": 30,
+    "standby_on_no_class": true
+  }
 }
 ```
 

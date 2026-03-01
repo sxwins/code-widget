@@ -12,6 +12,45 @@
     "6": {"start": "18:40", "end": "20:20"}
   },
 
+  "course_types": {
+    "spring": {
+      "name":         "春セメスター",
+      "semester_id":  "spring_2026",
+      "session_keys": ["01","02","03","04","05","06","07","08","09","10","11","12","13","14"],
+      "slots_per_week": 1
+    },
+    "autumn": {
+      "name":         "秋セメスター",
+      "semester_id":  "autumn_2026",
+      "session_keys": ["01","02","03","04","05","06","07","08","09","10","11","12","13","14"],
+      "slots_per_week": 1
+    },
+    "Q1": {
+      "name":         "第1クォーター（春前半）",
+      "semester_id":  "spring_2026",
+      "session_keys": ["01","02","03","04","05","06","07"],
+      "slots_per_week": 2
+    },
+    "Q2": {
+      "name":         "第2クォーター（春後半）",
+      "semester_id":  "spring_2026",
+      "session_keys": ["08","09","10","11","12","13","14"],
+      "slots_per_week": 2
+    },
+    "Q3": {
+      "name":         "第3クォーター（秋前半）",
+      "semester_id":  "autumn_2026",
+      "session_keys": ["01","02","03","04","05","06","07"],
+      "slots_per_week": 2
+    },
+    "Q4": {
+      "name":         "第4クォーター（秋後半）",
+      "semester_id":  "autumn_2026",
+      "session_keys": ["08","09","10","11","12","13","14"],
+      "slots_per_week": 2
+    }
+  },
+
   "semesters": [
     {
       "semester_id": "spring_2026",

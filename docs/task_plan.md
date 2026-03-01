@@ -61,7 +61,8 @@ Phase 2: 架构设计
 ## Decisions Made
 | Decision | Rationale |
 |----------|-----------|
-| Python + PySide6 | LGPL 更友好，社区活跃，Qt6 原生跨平台，置顶/托盘支持好 |
+| Python + **PySide6**（确认） | 官方 Qt 绑定；LGPL v3 在学校内部使用场景完全合规免费；工具链完整；长期维护有保障 |
+| 不选 PyQt6 | GPL v3 免费版不允许闭源分发；商业版需付费；PySide6 技术上无明显劣势 |
 | JSON 配置文件 | 纯文本、可移植、可手动编辑，无需数据库 |
 | 两层配置文件 | school_config.json（全校通用）+ teacher_config.json（个人课程+调整） |
 | PyInstaller 打包 | 生成独立可执行文件，用户无需安装 Python |

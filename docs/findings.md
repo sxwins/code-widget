@@ -32,14 +32,14 @@
     "Thursday":  [...],
     "Friday":    [...]
   },
+  "_periods_source": "本学時間割（docs/time_slot.png より）",
   "periods": {
-    "1": {"start": "08:50", "end": "10:20"},
-    "2": {"start": "10:30", "end": "12:00"},
-    "3": {"start": "13:00", "end": "14:30"},
-    "4": {"start": "14:40", "end": "16:10"},
-    "5": {"start": "16:20", "end": "17:50"},
-    "6": {"start": "18:30", "end": "20:00"},
-    "7": {"start": "20:10", "end": "21:40"}
+    "1": {"start": "08:50", "end": "10:30"},
+    "2": {"start": "10:40", "end": "12:20"},
+    "3": {"start": "13:10", "end": "14:50"},
+    "4": {"start": "15:00", "end": "16:40"},
+    "5": {"start": "16:50", "end": "18:30"},
+    "6": {"start": "18:40", "end": "20:20"}
   }
 }
 ```
@@ -95,24 +95,50 @@
 
 | Decision | Rationale |
 |----------|-----------|
-| PySide6（非 PyQt6） | LGPL 授权更友好；Qt6 原生支持 always-on-top、系统托盘、跨平台 |
+| **PySide6**（不用 PyQt6） | 见下方详细说明 ↓ |
 | JSON 配置文件 | 纯文本、可移植、无需数据库、可手动编辑 |
 | 双文件配置 | school_config.json（全校/可共享）+ teacher_config.json（个人） |
 | PyInstaller 打包 | 独立可执行，用户无需安装任何依赖 |
 | 排课引擎纯 Python | 与 GUI 解耦，便于测试 |
 
-## Project Structure（建议）
+### GUI 框架选型：PySide6（已确认）
+
+**结论：** 选用 PySide6（社区版，LGPL v3），不购买商业许可证。
+
+#### 授权分析
+| 框架 | 免费版授权 | 闭源商业分发 |
+|------|-----------|------------|
+| PyQt6 | GPL v3 | 不允许（须购买 Riverbank 商业许可） |
+| PySide6 | **LGPL v3** | **允许**（满足 LGPL 条件即可） |
+
+本项目为学校内部部署（教师端工具，不对外销售、不向第三方分发），属于"内部使用"场景。
+**LGPL v3 的分发条款在内部使用时不被触发**，因此社区版完全合规，无需付费。
+
+#### 选择 PySide6 的技术理由
+1. **官方维护**：由 Qt Company 直接维护，是 Qt for Python 的官方绑定，长期支持有保障
+2. **工具链完整**：附带 `pyside6-deploy`、`pyside6-uic`、`pyside6-rcc` 等官方工具，打包流程更规范
+3. **文档质量**：与 Qt 官方文档深度集成，API 参考更完整
+4. **API 兼容**：与 PyQt6 约 90% 兼容，未来迁移成本低
+5. **社区增长**：官方背书后社区活跃度持续提升，学习资料丰富
+
+#### 未来注意事项
+- 若将来需要向校外分发打包版本（.exe/.app），需确保 Qt DLL 以独立文件形式存在（不完全合并进单一 exe），以满足 LGPL 的"可替换库"要求；或届时购买 Qt 商业许可证。
+- 通过 `pip install pyside6` 安装的社区版用于内部使用完全合规。
+
+## Project Structure（确定）
 ```
 CodeWidget/
-├── requirements.md          # 需求文档（已有）
-├── task_plan.md             # 项目规划
-├── findings.md              # 本文件
-├── progress.md              # 进度日志
+├── docs/
+│   ├── requirements.md      # 需求文档
+│   ├── task_plan.md         # 项目规划
+│   ├── findings.md          # 本文件（设计决策）
+│   ├── progress.md          # 进度日志
+│   └── time_slot.png        # 时限表原始图片
 ├── src/
 │   ├── main.py              # 程序入口，初始化 QApplication + 系统托盘
 │   ├── engine/
 │   │   ├── scheduler.py     # 排课引擎：推导授课日、计算窗口期
-│   │   └── override.py      # 调整规则应用（stop/makeup/reschedule）
+│   │   └── override.py      # 调整规则应用（skip/makeup/reschedule）
 │   ├── models/
 │   │   ├── school_config.py # SchoolConfig 数据类 + JSON 读写
 │   │   └── teacher_config.py# TeacherConfig + Override 数据类
@@ -122,12 +148,13 @@ CodeWidget/
 │   │   └── config_dialog.py     # 配置界面（课程管理、预览、调整）
 │   └── utils/
 │       └── time_utils.py    # 时间工具函数
-├── assets/
-│   └── icon.png             # 托盘图标
+├── assets/                  # 图标等资源
 ├── config/
-│   ├── school_config.json   # 全校通用配置（示例/模板）
-│   └── teacher_config.json  # 教师个人配置
-└── build/                   # PyInstaller 输出
+│   ├── school_config.json   # 全校通用配置（含实际6限时间）
+│   └── teacher_config.json  # 教师个人配置模板
+├── tests/                   # 单元测试
+├── requirements.txt         # Python 依赖
+└── build/                   # PyInstaller 输出（gitignored）
 ```
 
 ## Issues Encountered
@@ -136,7 +163,8 @@ CodeWidget/
 | （暂无） | — |
 
 ## Resources
-- 需求文档：`requirements.md`（项目根目录）
+- 需求文档：`docs/requirements.md`
+- 时限表原图：`docs/time_slot.png`
 - PySide6 文档：https://doc.qt.io/qtforpython-6/
 - PyInstaller 文档：https://pyinstaller.org/
 

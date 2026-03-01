@@ -55,6 +55,8 @@ class Appearance:
     code_color: str = "#000000"
     code_bg_color: str = "#ffffff"
     border_color: str = "#90CAF9"
+    course_font_family: str = ""
+    course_font_size: int = 11
 
 
 @dataclass

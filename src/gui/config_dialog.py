@@ -6,7 +6,7 @@ import random
 import re
 from pathlib import Path
 
-from PySide6.QtCore import QDate, Signal
+from PySide6.QtCore import QDate, QTimer, Signal
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QColorDialog,
@@ -214,22 +214,46 @@ class CourseEditDialog(QDialog):
 
 
 class RescheduleDialog(QDialog):
-    """Dialog for adding a reschedule (time adjustment) override."""
+    """Dialog for adding or editing a reschedule (time adjustment) override."""
 
     def __init__(
         self,
         school_config: SchoolConfig,
         teacher_config: TeacherConfig,
+        existing_override: Override | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.school_config = school_config
         self.teacher_config = teacher_config
+        self._existing = existing_override
         self.result_override: Override | None = None
         self._sessions: list[ScheduledClass] = []
 
-        self.setWindowTitle("調整を追加")
+        self.setWindowTitle("調整を編集" if existing_override is not None else "調整を追加")
         self._build_ui()
+        if existing_override is not None:
+            self._prefill(existing_override)
+
+    def _prefill(self, ov: Override) -> None:
+        course_idx = self._course_combo.findData(ov.course_id)
+        if course_idx >= 0:
+            self._course_combo.setCurrentIndex(course_idx)
+        for i, sc in enumerate(self._sessions):
+            if str(sc.date) == ov.original_date and sc.period == ov.original_period:
+                self._session_combo.setCurrentIndex(i)
+                break
+        if ov.new_date:
+            parts = ov.new_date.split("-")
+            if len(parts) == 3:
+                self._new_date_edit.setDate(QDate(int(parts[0]), int(parts[1]), int(parts[2])))
+        if ov.new_start_time:
+            self._period_combo.setCurrentIndex(self._period_combo.count() - 1)
+            self._time_edit.setText(ov.new_start_time)
+        elif ov.new_period is not None:
+            idx = self._period_combo.findData(ov.new_period)
+            if idx >= 0:
+                self._period_combo.setCurrentIndex(idx)
 
     def _build_ui(self) -> None:
         layout = QVBoxLayout(self)
@@ -420,12 +444,12 @@ class ConfigDialog(QDialog):
 
         # Footer buttons
         footer = QHBoxLayout()
-        btn_save = QPushButton("保存")
+        self._btn_save = QPushButton("保存")
         btn_cancel = QPushButton("キャンセル")
-        btn_save.clicked.connect(self._on_save)
+        self._btn_save.clicked.connect(self._on_save)
         btn_cancel.clicked.connect(self.reject)
         footer.addStretch()
-        footer.addWidget(btn_save)
+        footer.addWidget(self._btn_save)
         footer.addWidget(btn_cancel)
         main_layout.addLayout(footer)
 
@@ -492,21 +516,19 @@ class ConfigDialog(QDialog):
     def _build_adj_tab(self) -> None:
         layout = QVBoxLayout(self._tab_adj)
 
-        self.adj_table = QTableWidget(0, 4)
-        self.adj_table.setHorizontalHeaderLabels(["授業名", "元日付", "新日付", "新時限"])
+        self.adj_table = QTableWidget(0, 5)
+        self.adj_table.setHorizontalHeaderLabels(["授業名", "元日付", "新日付", "新時限", "操作"])
         hh = self.adj_table.horizontalHeader()
         for col in range(4):
             hh.setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
+        hh.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
         self.adj_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         layout.addWidget(self.adj_table)
 
         btn_layout = QHBoxLayout()
         btn_add = QPushButton("調整を追加")
-        btn_del = QPushButton("削除")
         btn_add.clicked.connect(self._on_add_adjustment)
-        btn_del.clicked.connect(self._on_delete_override)
         btn_layout.addWidget(btn_add)
-        btn_layout.addWidget(btn_del)
         btn_layout.addStretch()
         layout.addLayout(btn_layout)
 
@@ -515,13 +537,19 @@ class ConfigDialog(QDialog):
         form = QFormLayout()
         ap = self.teacher_config.appearance
 
+        # --- 出席コード section ---
+        _lbl_code = QLabel("<b>出席コード</b>")
+        form.addRow(_lbl_code)
+
         # Font family
         self._font_combo = QFontComboBox()
+        self._font_combo.setMaximumWidth(180)
         self._font_combo.setCurrentFont(QFont(ap.code_font_family))
         form.addRow("フォント:", self._font_combo)
 
         # Font size
         self._size_spin = QSpinBox()
+        self._size_spin.setFixedWidth(60)
         self._size_spin.setRange(12, 200)
         self._size_spin.setValue(ap.code_font_size)
         form.addRow("サイズ:", self._size_spin)
@@ -546,6 +574,24 @@ class ConfigDialog(QDialog):
         self._border_btn.setStyleSheet(f"background-color: {ap.border_color}; border: 1px solid #888;")
         self._border_btn.clicked.connect(self._pick_border_color)
         form.addRow("枠色:", self._border_btn)
+
+        # --- 科目名 section ---
+        _lbl_course = QLabel("<b>科目名</b>")
+        form.addRow(_lbl_course)
+
+        # Course font family
+        self._course_font_combo = QFontComboBox()
+        self._course_font_combo.setMaximumWidth(180)
+        course_family = ap.course_font_family or QFont().family()
+        self._course_font_combo.setCurrentFont(QFont(course_family))
+        form.addRow("フォント:", self._course_font_combo)
+
+        # Course font size
+        self._course_size_spin = QSpinBox()
+        self._course_size_spin.setFixedWidth(60)
+        self._course_size_spin.setRange(6, 72)
+        self._course_size_spin.setValue(ap.course_font_size)
+        form.addRow("サイズ:", self._course_size_spin)
 
         layout.addLayout(form)
         layout.addStretch()
@@ -610,7 +656,7 @@ class ConfigDialog(QDialog):
                 end_str = f"{total_end // 60:02d}:{total_end % 60:02d}"
                 period_str = f"{sc.custom_start}-{end_str}"
             else:
-                period_str = str(sc.period)
+                period_str = f"{sc.period}限"
             self.preview_table.setItem(row, 3, QTableWidgetItem(period_str))
             code = self.teacher_config.attendance_codes.get(f"{course_id}_{sc.session_key}", "")
             self.preview_table.setItem(row, 4, QTableWidgetItem(code))
@@ -620,7 +666,7 @@ class ConfigDialog(QDialog):
     def _populate_adj_table(self) -> None:
         self.adj_table.setRowCount(0)
         course_map = {c.id: c.name for c in self.teacher_config.courses}
-        for ov in self.teacher_config.overrides:
+        for idx, ov in enumerate(self.teacher_config.overrides):
             row = self.adj_table.rowCount()
             self.adj_table.insertRow(row)
             self.adj_table.setItem(row, 0, QTableWidgetItem(course_map.get(ov.course_id, ov.course_id)))
@@ -628,12 +674,16 @@ class ConfigDialog(QDialog):
             self.adj_table.setItem(row, 1, QTableWidgetItem(orig))
             self.adj_table.setItem(row, 2, QTableWidgetItem(ov.new_date))
             if ov.new_start_time:
-                period_str = ov.new_start_time
+                h, m = map(int, ov.new_start_time.split(":"))
+                total_end = h * 60 + m + 100
+                end_str = f"{total_end // 60:02d}:{total_end % 60:02d}"
+                period_str = f"{ov.new_start_time}-{end_str}"
             elif ov.new_period is not None:
-                period_str = str(ov.new_period)
+                period_str = f"{ov.new_period}限"
             else:
                 period_str = ""
             self.adj_table.setItem(row, 3, QTableWidgetItem(period_str))
+            self.adj_table.setCellWidget(row, 4, self._make_row_buttons(idx))
 
     def _on_generate_codes(self) -> None:
         course_id = self.preview_combo.currentData()
@@ -711,13 +761,46 @@ class ConfigDialog(QDialog):
             self._populate_adj_table()
             self._refresh_preview()
 
-    def _on_delete_override(self) -> None:
-        row = self.adj_table.currentRow()
+    def _make_row_buttons(self, row: int) -> QWidget:
+        container = QWidget()
+        layout = QHBoxLayout(container)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
+        btn_edit = QPushButton("✏")
+        btn_edit.setFixedSize(26, 22)
+        btn_del = QPushButton("🗑")
+        btn_del.setFixedSize(26, 22)
+        btn_edit.clicked.connect(lambda checked, r=row: self._on_edit_override(r))
+        btn_del.clicked.connect(lambda checked, r=row: self._on_delete_override_at(r))
+        layout.addWidget(btn_edit)
+        layout.addWidget(btn_del)
+        return container
+
+    def _on_edit_override(self, row: int) -> None:
         if row < 0 or row >= len(self.teacher_config.overrides):
             return
-        self.teacher_config.overrides.pop(row)
-        self._populate_adj_table()
-        self._refresh_preview()
+        ov = self.teacher_config.overrides[row]
+        dlg = RescheduleDialog(self.school_config, self.teacher_config, existing_override=ov, parent=self)
+        if dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_override is not None:
+            self.teacher_config.overrides[row] = dlg.result_override
+            self._populate_adj_table()
+            self._refresh_preview()
+
+    def _on_delete_override_at(self, row: int) -> None:
+        if row < 0 or row >= len(self.teacher_config.overrides):
+            return
+        ov = self.teacher_config.overrides[row]
+        course_name = next((c.name for c in self.teacher_config.courses if c.id == ov.course_id), ov.course_id)
+        answer = QMessageBox.question(
+            self,
+            "削除確認",
+            f"「{course_name}」の調整（{ov.original_date}）を削除しますか？",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if answer == QMessageBox.StandardButton.Yes:
+            self.teacher_config.overrides.pop(row)
+            self._populate_adj_table()
+            self._refresh_preview()
 
     def _pick_code_color(self) -> None:
         color = QColorDialog.getColor(QColor(self.teacher_config.appearance.code_color), self)
@@ -740,8 +823,12 @@ class ConfigDialog(QDialog):
     def _on_save(self) -> None:
         self.teacher_config.appearance.code_font_family = self._font_combo.currentFont().family()
         self.teacher_config.appearance.code_font_size = self._size_spin.value()
+        self.teacher_config.appearance.course_font_family = self._course_font_combo.currentFont().family()
+        self.teacher_config.appearance.course_font_size = self._course_size_spin.value()
         if self.save_path is not None:
             save_teacher_config(self.teacher_config, self.save_path)
         self._orig_teacher.__dict__.update(self.teacher_config.__dict__)
         self.config_saved.emit()
-        self.accept()
+        self._btn_save.setText("✓ 保存完了")
+        self._btn_save.setEnabled(False)
+        QTimer.singleShot(2000, lambda: (self._btn_save.setText("保存"), self._btn_save.setEnabled(True)))

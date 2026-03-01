@@ -55,8 +55,8 @@ def test_adj_tab_single_button(qtbot, school, teacher):
     from PySide6.QtWidgets import QPushButton
     dlg = ConfigDialog(school_config=school, teacher_config=teacher)
     qtbot.addWidget(dlg)
-    # Adj tab should have exactly 2 buttons: 調整を追加 and 削除
+    # Adj tab should have "調整を追加" button and no global 削除 button
     buttons = dlg._tab_adj.findChildren(QPushButton)
-    assert len(buttons) == 2
     labels = {btn.text() for btn in buttons}
-    assert labels == {"調整を追加", "削除"}
+    assert "調整を追加" in labels
+    assert "削除" not in labels

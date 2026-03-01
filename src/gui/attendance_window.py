@@ -159,6 +159,10 @@ class AttendanceWindow(QWidget):
         pal.setColor(QPalette.ColorRole.Window, QColor(appearance.code_bg_color))
         self.setPalette(pal)
         self._border_color = appearance.border_color
+        if appearance.course_font_family:
+            course_font = QFont(appearance.course_font_family, appearance.course_font_size)
+            course_font.setBold(True)
+            self.label_course.setFont(course_font)
         self.update()
 
     def update_class(self, sc: ScheduledClass, code: str = "") -> None:

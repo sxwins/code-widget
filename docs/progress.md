@@ -50,14 +50,18 @@
 |-----------|-------|---------|------------|
 | — | （暂无） | — | — |
 
+  - 从 docs/邵_教員時間割表.pdf 提取邵先生全课程（春6门+秋8门），生成 config/邵_teacher_config.json
+  - 确认并文档化完整业务逻辑数据流（findings.md "業務ロジック"）
+  - Phase 2 标记为 complete，Phase 3 开始
+
 ## 5-Question Reboot Check
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 2: 架构设计（in_progress） |
-| Where am I going? | Phase 3: 核心逻辑实现 → Phase 4: GUI → Phase 5: 打包 → Phase 6: 测试 |
+| Where am I? | Phase 3: 核心逻辑实现（in_progress） |
+| Where am I going? | Phase 4: GUI → Phase 5: 打包 → Phase 6: 测试 |
 | What's the goal? | 开发出勤码展示工具：置顶小窗、按课表自动提示、支持调整、打包为独立 exe/app |
-| What have I learned? | 见 findings.md：数据模型设计、业务规则、技术栈、目录结构 |
-| What have I done? | 读完需求文档，建立规划文件，完成数据模型与目录结构设计 |
+| What have I learned? | 见 findings.md：完整业务逻辑、数据模型、6种课程类型、实际配置数据 |
+| What have I done? | Phase 1-2 完成：需求分析、架构设计、配置数据填充、业务逻辑确认 |
 
 ---
 *Update after completing each phase or encountering errors*

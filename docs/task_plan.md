@@ -4,7 +4,7 @@
 开发一个轻量级桌面工具，帮助教师在上课前后自动弹出置顶小窗展示出勤码，支持按学期课表智能提示、手动输入码、以及停课/补课/调课调整，打包为 Windows/macOS 独立可执行文件。
 
 ## Current Phase
-Phase 2: 架构设计
+Phase 3: 核心逻辑实现
 
 ## Phases
 
@@ -16,20 +16,22 @@ Phase 2: 架构设计
 - **Status:** complete
 
 ### Phase 2: 架构设计
-- [ ] 确定项目目录结构
-- [ ] 设计数据模型（JSON 配置格式）
-- [ ] 设计核心排课引擎接口
-- [ ] 设计 GUI 窗口层级与交互流程
-- [ ] 记录决策到 findings.md
-- **Status:** in_progress
+- [x] 确定项目目录结构
+- [x] 设计数据模型（JSON 配置格式：school_config + teacher_config）
+- [x] 定义6种课程类型（spring/autumn/Q1〜Q4）及其 session_keys 映射规则
+- [x] 确认完整业务逻辑数据流（见 findings.md "業務ロジック"）
+- [x] 填充实际配置数据（6限时间表、春秋两学期14回授课日、邵先生课程配置）
+- [x] 记录所有决策到 findings.md
+- **Status:** complete
 
 ### Phase 3: 核心逻辑实现
-- [ ] 数据模型类（SchoolConfig、TeacherConfig、Override、Session）
-- [ ] JSON 配置文件读写
-- [ ] 排课引擎：授课日推导、第几回计算
-- [ ] 调整规则应用（停课/补课/调课叠加）
-- [ ] 显示窗口判定逻辑（当前时间是否在窗口期内）
-- **Status:** pending
+- [ ] 数据模型类（SchoolConfig、TeacherConfig、Course、Override）
+- [ ] JSON 配置文件读写（load/save school_config + teacher_config）
+- [ ] 排课引擎：course_type + slot → 授课日期列表（含 Q 系双槽位）
+- [ ] Override 应用：skip / makeup / reschedule 叠加到基础日期列表
+- [ ] 显示窗口判定：当前时间 vs window_start/window_end
+- [ ] 多课冲突消解：选优先显示课程
+- **Status:** in_progress
 
 ### Phase 4: GUI 实现
 - [ ] 系统托盘 + 主程序生命周期管理

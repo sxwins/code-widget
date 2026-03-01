@@ -138,15 +138,112 @@
 }
 ```
 
-## 业务规则（来自 requirements.md §6）
+## 業務ロジック（確定済み）
 
-| 规则 | 说明 |
-|------|------|
-| 显示窗口 | 课程开始前10分钟 ～ 课程开始后30分钟 |
-| 多课冲突 | 优先"窗口开始时间更接近当前时间"的课程（或课时序号更小） |
-| 非窗口期 | 待机/隐藏（可配置），允许手动打开 |
-| 停课优先 | 调整规则优先级高于基础课表推导 |
-| 回次计算 | 按"实际授课发生顺序"（应用调整后）重新编号 |
+データ準備フェーズ完了。以下のロジックで「今日・今の時刻に出席コードを表示すべきか」を判定する。
+
+---
+
+### ステップ1：授業日付の解決
+
+```
+course.course_type
+  → course_types[course_type]
+      .semester_id   → semesters[semester_id].weekday_dates
+      .session_keys  → 使用する回次キー（"01"〜"14" または "01"〜"07" 等）
+
+course.slots[].weekday
+  → weekday_dates[weekday]
+      [session_key]  → 授業日付（YYYY-MM-DD）
+```
+
+**Q 系 course（Q1〜Q4）の場合：**
+- 2つの slot（例：水曜2限・金曜3限）が同一 session_key を共有する
+- session "01" = 第1週の水曜授業 + 第1週の金曜授業、というペアになる
+
+| course_type | semester_id | session_keys | 週あたり回数 |
+|------------|-------------|-------------|------------|
+| spring | spring_2026 | 01〜14 | 1 |
+| autumn | autumn_2026 | 01〜14 | 1 |
+| Q1 | spring_2026 | 01〜07 | 2 |
+| Q2 | spring_2026 | 08〜14 | 2 |
+| Q3 | autumn_2026 | 01〜07 | 2 |
+| Q4 | autumn_2026 | 08〜14 | 2 |
+
+---
+
+### ステップ2：授業時刻の解決
+
+```
+slot.period
+  → periods[period].start  → 授業開始時刻（HH:MM）
+```
+
+| 限 | 開始 | 終了 |
+|----|------|------|
+| 1 | 08:50 | 10:30 |
+| 2 | 10:40 | 12:20 |
+| 3 | 13:10 | 14:50 |
+| 4 | 15:00 | 16:40 |
+| 5 | 16:50 | 18:30 |
+| 6 | 18:40 | 20:20 |
+
+---
+
+### ステップ3：表示ウィンドウの判定
+
+```
+window_start = 授業開始時刻 − pre_class_minutes（デフォルト10分）
+window_end   = 授業開始時刻 + post_class_minutes（デフォルト30分）
+
+if window_start ≤ 現在時刻 ≤ window_end:
+    → 出席コード表示ウィンドウを表示
+```
+
+---
+
+### ステップ4：Override の適用（基礎課表より優先）
+
+| タイプ | 動作 |
+|--------|------|
+| `skip` | 指定日付の授業をキャンセル（ウィンドウ非表示） |
+| `makeup` | 新しい授業日付・限を追加（その日もウィンドウ表示対象） |
+| `reschedule` | 元日付を skip + 新日付を makeup の組み合わせ |
+
+Override 適用後に授業日付リストを再構築し、回次を実際の授業発生順で採番しなおす。
+
+---
+
+### ステップ5：複数課程が同時に命中した場合
+
+優先順位：「window_start が現在時刻に最も近い課程」を表示。同点の場合は period 番号の小さい方を優先。
+
+---
+
+### ステップ6：非ウィンドウ期の動作
+
+`standby_on_no_class: true` の場合 → 待機状態（システムトレイに格納）
+教員が手動でウィンドウを開くことも可能。
+
+---
+
+### データフロー全体図
+
+```
+school_config.json                  teacher_config.json
+├── periods[1〜6]         ←──────── courses[].slots[].period
+└── semesters[]                      courses[].course_type
+    └── weekday_dates     ←──────── courses[].slots[].weekday
+        [weekday][回次]               + course_types[].session_keys
+              ↓                               ↓
+         授業日付 ──── Override適用 ────→ 確定授業日リスト
+              ↓
+         periods[period].start
+              ↓
+    window_start / window_end
+              ↓
+    現在時刻と比較 → 表示 / 待機
+```
 
 ## Technical Decisions
 
@@ -207,8 +304,9 @@ CodeWidget/
 │       └── time_utils.py    # 时间工具函数
 ├── assets/                  # 图标等资源
 ├── config/
-│   ├── school_config.json   # 全校通用配置（含实际6限时间）
-│   └── teacher_config.json  # 教师个人配置模板
+│   ├── school_config.json      # 全校通用配置（含实际6限时间 + 春秋两学期授课日）
+│   ├── teacher_config.json     # 教师个人配置模板
+│   └── 邵_teacher_config.json  # 邵先生実際設定（2026年度）
 ├── tests/                   # 单元测试
 ├── requirements.txt         # Python 依赖
 └── build/                   # PyInstaller 输出（gitignored）

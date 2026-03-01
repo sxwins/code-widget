@@ -72,7 +72,7 @@ class TrayIcon(QSystemTrayIcon):
             self.setToolTip("CodeWidget — No active class")
             self._action_toggle.setText("ウィンドウを表示")
         else:
-            self.setToolTip(f"CodeWidget — {sc.course_name}\u3000第{sc.session_key}回")
+            self.setToolTip(f"CodeWidget — {sc.course_name}  第{sc.session_key}回")
             if self._attendance_window.isVisible():
                 self._action_toggle.setText("ウィンドウを隠す")
             else:

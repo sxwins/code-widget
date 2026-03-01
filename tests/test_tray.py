@@ -18,4 +18,4 @@ def test_tray_tooltip_no_class(qtbot, qapp):
     qtbot.addWidget(win)
     tray = TrayIcon(attendance_window=win)
     tray.update_status(None)
-    assert "No active class" in tray.toolTip() or tray.toolTip() == ""
+    assert "No active class" in tray.toolTip()

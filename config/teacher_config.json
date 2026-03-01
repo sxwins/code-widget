@@ -1,0 +1,12 @@
+{
+  "_comment": "教师个人配置示例 — 请填写真实课程信息",
+  "teacher_name": "",
+  "courses": [],
+  "overrides": [],
+  "window_position": {"x": 100, "y": 100},
+  "settings": {
+    "pre_class_minutes": 10,
+    "post_class_minutes": 30,
+    "standby_on_no_class": true
+  }
+}

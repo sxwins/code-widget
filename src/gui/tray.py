@@ -22,6 +22,7 @@ class TrayIcon(QSystemTrayIcon):
         self._attendance_window = attendance_window
 
         # --- Icon: try assets/icon.png, fall back to a coloured square ---
+        # TODO(phase5): replace path with sys._MEIPASS-aware helper for PyInstaller
         icon_path = os.path.join(
             os.path.dirname(__file__), "..", "..", "assets", "icon.png"
         )

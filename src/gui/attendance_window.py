@@ -110,7 +110,7 @@ class AttendanceWindow(QWidget):
     # ------------------------------------------------------------------
 
     def update_class(self, sc: ScheduledClass) -> None:
-        """Populate labels from a ScheduledClass and show the window."""
+        """Populate course name and session key labels. Caller is responsible for show()."""
         self.label_course.setText(sc.course_name)
         self.label_session.setText(f"第{sc.session_key}回")
 

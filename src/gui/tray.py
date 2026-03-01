@@ -1,10 +1,10 @@
-# tray.py — system tray integration
+"""tray.py — system tray icon and context menu."""
 from __future__ import annotations
 
 import os
 
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QColor, QIcon, QPixmap
+from PySide6.QtGui import QAction, QColor, QIcon, QPixmap
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from engine.scheduler import ScheduledClass
@@ -44,7 +44,7 @@ class TrayIcon(QSystemTrayIcon):
         menu.addSeparator()
 
         action_quit = menu.addAction("終了")
-        action_quit.triggered.connect(QApplication.instance().quit)
+        action_quit.triggered.connect(lambda: QApplication.instance().quit())
 
         self.setContextMenu(menu)
 

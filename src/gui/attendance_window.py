@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QFont, QPainter, QPalette, QPen, QPixmap
+from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -26,6 +26,7 @@ class AttendanceWindow(QWidget):
     position_changed = Signal(int, int)
     open_settings = Signal()
     code_entered = Signal(str, str)  # (code_key, code_value)
+    code_cleared = Signal(str)       # (code_key)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         flags = (
@@ -36,12 +37,11 @@ class AttendanceWindow(QWidget):
         super().__init__(parent, flags)
 
         self.setFixedSize(300, 125)
-        pal = self.palette()
-        pal.setColor(QPalette.ColorRole.Window, QColor("white"))
-        self.setPalette(pal)
-        self.setAutoFillBackground(True)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
+        self._bg_color = QColor("white")
         self._border_color = "#90CAF9"
+        self._corner_radius = 12
 
         # Drag state
         self._drag_active = False
@@ -88,6 +88,7 @@ class AttendanceWindow(QWidget):
 
         # --- Main layout ---
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(10, 8, 10, 6)
         main_layout.addLayout(top_layout)
         main_layout.addWidget(self.code_edit)
 
@@ -99,11 +100,18 @@ class AttendanceWindow(QWidget):
     # ------------------------------------------------------------------
 
     def paintEvent(self, event) -> None:
-        super().paintEvent(event)
         p = QPainter(self)
-        p.setPen(QPen(QColor(self._border_color), 2))
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        r = self._corner_radius
+        rect = self.rect().adjusted(1, 1, -1, -1)
+        # Background fill
+        p.setBrush(QBrush(self._bg_color))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawRoundedRect(rect, r, r)
+        # Border
+        p.setPen(QPen(QColor(self._border_color), 1.5))
         p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawRect(1, 1, self.width() - 2, self.height() - 2)
+        p.drawRoundedRect(rect, r, r)
         p.end()
 
     # ------------------------------------------------------------------
@@ -147,8 +155,12 @@ class AttendanceWindow(QWidget):
             self.code_entered.emit(key, self.code_edit.text())
 
     def _on_clear_btn(self) -> None:
-        self.code_edit.clear()
         self.code_edit.setReadOnly(True)
+        if self._current_sc is not None:
+            key = f"{self._current_sc.course_id}_{self._current_sc.session_key}"
+            self.code_cleared.emit(key)
+        else:
+            self.code_edit.clear()
 
     # ------------------------------------------------------------------
     # Public API
@@ -162,9 +174,7 @@ class AttendanceWindow(QWidget):
         self.code_edit.setStyleSheet(
             f"color: {appearance.code_color}; background-color: transparent; border: none;"
         )
-        pal = self.palette()
-        pal.setColor(QPalette.ColorRole.Window, QColor(appearance.code_bg_color))
-        self.setPalette(pal)
+        self._bg_color = QColor(appearance.code_bg_color)
         self._border_color = appearance.border_color
         if appearance.course_font_family:
             course_font = QFont(appearance.course_font_family, appearance.course_font_size)

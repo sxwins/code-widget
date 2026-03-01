@@ -118,7 +118,13 @@ def main():
     def on_temp_code_entered(key: str, code: str) -> None:
         _temp_codes[key] = (code, now() + timedelta(minutes=30))
 
+    def on_temp_code_cleared(key: str) -> None:
+        _temp_codes.pop(key, None)
+        if _last_active[0] is not None:
+            win.update_class(_last_active[0], _code_for(_last_active[0]))
+
     win.code_entered.connect(on_temp_code_entered)
+    win.code_cleared.connect(on_temp_code_cleared)
 
     def _code_for(sc: ScheduledClass) -> str:
         key = f"{sc.course_id}_{sc.session_key}"

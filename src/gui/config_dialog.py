@@ -7,11 +7,14 @@ import re
 from pathlib import Path
 
 from PySide6.QtCore import QDate, Signal
+from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
+    QColorDialog,
     QComboBox,
     QDateEdit,
     QDialog,
     QDialogButtonBox,
+    QFontComboBox,
     QFormLayout,
     QHBoxLayout,
     QHeaderView,
@@ -19,6 +22,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QSpinBox,
     QStyledItemDelegate,
     QTableWidget,
     QTableWidgetItem,
@@ -31,6 +35,7 @@ from engine.override import apply_overrides
 from engine.scheduler import ScheduledClass, resolve_course_schedule
 from models.school_config import SchoolConfig
 from models.teacher_config import (
+    Appearance,
     Course,
     Override,
     Slot,
@@ -408,6 +413,11 @@ class ConfigDialog(QDialog):
         self.tabs.addTab(self._tab_adj, "調整")
         self._build_adj_tab()
 
+        # Tab 4: 外観
+        self._tab_appearance = QWidget()
+        self.tabs.addTab(self._tab_appearance, "外観")
+        self._build_appearance_tab()
+
         # Footer buttons
         footer = QHBoxLayout()
         btn_save = QPushButton("保存")
@@ -500,6 +510,39 @@ class ConfigDialog(QDialog):
         btn_layout.addStretch()
         layout.addLayout(btn_layout)
 
+    def _build_appearance_tab(self) -> None:
+        layout = QVBoxLayout(self._tab_appearance)
+        form = QFormLayout()
+        ap = self.teacher_config.appearance
+
+        # Font family
+        self._font_combo = QFontComboBox()
+        self._font_combo.setCurrentFont(QFont(ap.code_font_family))
+        form.addRow("フォント:", self._font_combo)
+
+        # Font size
+        self._size_spin = QSpinBox()
+        self._size_spin.setRange(12, 200)
+        self._size_spin.setValue(ap.code_font_size)
+        form.addRow("サイズ:", self._size_spin)
+
+        # Text color
+        self._color_btn = QPushButton()
+        self._color_btn.setFixedSize(60, 24)
+        self._color_btn.setStyleSheet(f"background-color: {ap.code_color}; border: 1px solid #888;")
+        self._color_btn.clicked.connect(self._pick_code_color)
+        form.addRow("文字色:", self._color_btn)
+
+        # Background color
+        self._bg_btn = QPushButton()
+        self._bg_btn.setFixedSize(60, 24)
+        self._bg_btn.setStyleSheet(f"background-color: {ap.code_bg_color}; border: 1px solid #888;")
+        self._bg_btn.clicked.connect(self._pick_bg_color)
+        form.addRow("背景色:", self._bg_btn)
+
+        layout.addLayout(form)
+        layout.addStretch()
+
     # ------------------------------------------------------------------
     # Population helpers
     # ------------------------------------------------------------------
@@ -562,7 +605,7 @@ class ConfigDialog(QDialog):
             else:
                 period_str = str(sc.period)
             self.preview_table.setItem(row, 3, QTableWidgetItem(period_str))
-            code = self.teacher_config.attendance_codes.get(f"{course_id}_{date_str}", "")
+            code = self.teacher_config.attendance_codes.get(f"{course_id}_{sc.session_key}", "")
             self.preview_table.setItem(row, 4, QTableWidgetItem(code))
 
         self.preview_table.blockSignals(False)
@@ -590,23 +633,23 @@ class ConfigDialog(QDialog):
         if course_id is None:
             return
         for row in range(self.preview_table.rowCount()):
-            date_item = self.preview_table.item(row, 1)
-            if date_item is None:
+            session_item = self.preview_table.item(row, 0)  # col 0 = session_key
+            if session_item is None:
                 continue
             code = f"{random.randint(0, 9999):04d}"
-            self.teacher_config.attendance_codes[f"{course_id}_{date_item.text()}"] = code
+            self.teacher_config.attendance_codes[f"{course_id}_{session_item.text()}"] = code
         self._refresh_preview()
 
     def _on_code_changed(self, item: QTableWidgetItem) -> None:
         if item.column() != 4:
             return
-        date_item = self.preview_table.item(item.row(), 1)
-        if date_item is None:
+        session_item = self.preview_table.item(item.row(), 0)  # col 0 = session_key
+        if session_item is None:
             return
         course_id = self.preview_combo.currentData()
         if course_id is None:
             return
-        key = f"{course_id}_{date_item.text()}"
+        key = f"{course_id}_{session_item.text()}"
         code = item.text().strip()
         if code:
             self.teacher_config.attendance_codes[key] = code
@@ -669,7 +712,21 @@ class ConfigDialog(QDialog):
         self._populate_adj_table()
         self._refresh_preview()
 
+    def _pick_code_color(self) -> None:
+        color = QColorDialog.getColor(QColor(self.teacher_config.appearance.code_color), self)
+        if color.isValid():
+            self.teacher_config.appearance.code_color = color.name()
+            self._color_btn.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #888;")
+
+    def _pick_bg_color(self) -> None:
+        color = QColorDialog.getColor(QColor(self.teacher_config.appearance.code_bg_color), self)
+        if color.isValid():
+            self.teacher_config.appearance.code_bg_color = color.name()
+            self._bg_btn.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #888;")
+
     def _on_save(self) -> None:
+        self.teacher_config.appearance.code_font_family = self._font_combo.currentFont().family()
+        self.teacher_config.appearance.code_font_size = self._size_spin.value()
         if self.save_path is not None:
             save_teacher_config(self.teacher_config, self.save_path)
         self._orig_teacher.__dict__.update(self.teacher_config.__dict__)

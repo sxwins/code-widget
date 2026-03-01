@@ -69,7 +69,8 @@ def main():
     if teacher_config.window_position:
         win.move(teacher_config.window_position.x, teacher_config.window_position.y)
 
-    # Show window on startup
+    # Apply saved appearance and show window on startup
+    win.apply_appearance(teacher_config.appearance)
     win.show()
 
     # Save position when dragged
@@ -101,13 +102,14 @@ def main():
     def on_config_saved():
         nonlocal all_scheduled
         all_scheduled = _build_all_scheduled(teacher_config, school_config)
+        win.apply_appearance(teacher_config.appearance)
         _tick()
 
     tray.open_config.connect(open_config)
     win.open_settings.connect(open_config)
 
     def _code_for(sc: ScheduledClass) -> str:
-        return teacher_config.attendance_codes.get(f"{sc.course_id}_{sc.date}", "")
+        return teacher_config.attendance_codes.get(f"{sc.course_id}_{sc.session_key}", "")
 
     # Toggle window
     def toggle_window():

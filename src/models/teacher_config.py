@@ -49,6 +49,14 @@ class Settings:
 
 
 @dataclass
+class Appearance:
+    code_font_family: str = "Courier New"
+    code_font_size: int = 72
+    code_color: str = "#000000"
+    code_bg_color: str = "#ffffff"
+
+
+@dataclass
 class TeacherConfig:
     teacher_name: str
     courses: list[Course]
@@ -56,7 +64,8 @@ class TeacherConfig:
     window_position: WindowPosition = field(default_factory=WindowPosition)
     settings: Settings = field(default_factory=Settings)
     academic_year: str = ""
-    attendance_codes: dict[str, str] = field(default_factory=dict)  # key: "{course_id}_{date}"
+    attendance_codes: dict[str, str] = field(default_factory=dict)  # key: "{course_id}_{session_key}"
+    appearance: Appearance = field(default_factory=Appearance)
 
 
 def load_teacher_config(path: str | Path) -> TeacherConfig:
@@ -105,6 +114,10 @@ def load_teacher_config(path: str | Path) -> TeacherConfig:
             standby_on_no_class=settings_data.get("standby_on_no_class", True),
         ),
         attendance_codes=data.get("attendance_codes", {}),
+        appearance=Appearance(**{
+            k: v for k, v in data.get("appearance", {}).items()
+            if k in Appearance.__dataclass_fields__
+        }),
     )
 
 
@@ -140,6 +153,12 @@ def save_teacher_config(config: TeacherConfig, path: str | Path) -> None:
             for o in config.overrides
         ],
         "attendance_codes": config.attendance_codes,
+        "appearance": {
+            "code_font_family": config.appearance.code_font_family,
+            "code_font_size": config.appearance.code_font_size,
+            "code_color": config.appearance.code_color,
+            "code_bg_color": config.appearance.code_bg_color,
+        },
         "window_position": {"x": config.window_position.x, "y": config.window_position.y},
         "settings": {
             "pre_class_minutes": config.settings.pre_class_minutes,

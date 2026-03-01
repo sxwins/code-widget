@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.scheduler import ScheduledClass
+from models.teacher_config import Appearance
 
 
 class AttendanceWindow(QWidget):
@@ -115,6 +116,18 @@ class AttendanceWindow(QWidget):
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
+
+    def apply_appearance(self, appearance: Appearance) -> None:
+        """Apply font, color, and background from Appearance settings."""
+        font = QFont(appearance.code_font_family, appearance.code_font_size)
+        font.setBold(True)
+        self.code_edit.setFont(font)
+        self.code_edit.setStyleSheet(
+            f"color: {appearance.code_color}; background-color: transparent; border: none;"
+        )
+        pal = self.palette()
+        pal.setColor(QPalette.ColorRole.Window, QColor(appearance.code_bg_color))
+        self.setPalette(pal)
 
     def update_class(self, sc: ScheduledClass, code: str = "") -> None:
         """Populate course name, session key, and attendance code."""

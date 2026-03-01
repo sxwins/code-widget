@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QColor, QFont, QPalette
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -31,7 +31,10 @@ class AttendanceWindow(QWidget):
         super().__init__(parent, flags)
 
         self.setFixedSize(360, 170)
-        self.setStyleSheet("background-color: white;")
+        pal = self.palette()
+        pal.setColor(QPalette.ColorRole.Window, QColor("white"))
+        self.setPalette(pal)
+        self.setAutoFillBackground(True)
 
         # Drag state
         self._drag_active = False
@@ -62,7 +65,9 @@ class AttendanceWindow(QWidget):
         self.code_edit.setFont(font_code)
         self.code_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.code_edit.setReadOnly(True)
+        self.code_edit.setPlaceholderText("----")
         self.code_edit.setFrame(False)
+        self.code_edit.editingFinished.connect(self._on_editing_finished)
 
         # --- Bottom: buttons ---
         self.btn_edit = QPushButton("入力 / ペースト")
@@ -80,7 +85,6 @@ class AttendanceWindow(QWidget):
         main_layout.addLayout(top_layout)
         main_layout.addWidget(self.code_edit)
         main_layout.addLayout(btn_layout)
-        self.setLayout(main_layout)
 
         # Start hidden
         self.hide()
@@ -92,6 +96,10 @@ class AttendanceWindow(QWidget):
     def _on_edit(self) -> None:
         self.code_edit.setReadOnly(False)
         self.code_edit.setFocus()
+        self.code_edit.selectAll()
+
+    def _on_editing_finished(self) -> None:
+        self.code_edit.setReadOnly(True)
 
     def _on_clear_btn(self) -> None:
         self.code_edit.clear()

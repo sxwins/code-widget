@@ -229,10 +229,6 @@ class OverrideEditDialog(QDialog):
             form.addRow("日付:", self._date_edit)
 
         elif self.ov_type == "makeup":
-            self._date_edit = QLineEdit()
-            self._date_edit.setPlaceholderText("YYYY-MM-DD")
-            form.addRow("日付:", self._date_edit)
-
             self._new_date_edit = QLineEdit()
             self._new_date_edit.setPlaceholderText("YYYY-MM-DD")
             form.addRow("新日付:", self._new_date_edit)
@@ -281,7 +277,7 @@ class OverrideEditDialog(QDialog):
             self.result_override = Override(
                 type="makeup",
                 course_id=course_id,
-                date=date_str,
+                date=self._new_date_edit.text().strip(),
                 period=period,
             )
         elif self.ov_type == "reschedule":

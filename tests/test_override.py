@@ -101,3 +101,30 @@ class TestReschedule:
         result = apply_overrides(base_scheduled, [ov])
         moved = next(sc for sc in result if sc.date == date(2026, 4, 18))
         assert moved.period == 2
+
+
+# ---------------------------------------------------------------------------
+# Q1 multi-slot course (2 slots/week × 7 weeks = 14 sessions)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(scope="module")
+def q1_scheduled(school, teacher):
+    course = next(c for c in teacher.courses if c.id == "RD010001E3")
+    return resolve_course_schedule(course, school)
+
+
+class TestQ1MultiSlot:
+    def test_q1_keys_sequential_01_to_14(self, q1_scheduled):
+        result = sorted(apply_overrides(list(q1_scheduled), []), key=lambda s: (s.date, s.period))
+        assert [s.session_key for s in result] == [f"{n:02d}" for n in range(1, 15)]
+
+    def test_q1_week1_slot0_is_01_slot1_is_02(self, q1_scheduled):
+        result = sorted(apply_overrides(list(q1_scheduled), []), key=lambda s: (s.date, s.period))
+        assert result[0].session_key == "01"   # 2026-04-15 Wed period=2
+        assert result[1].session_key == "02"   # 2026-04-17 Fri period=3
+
+    def test_q1_skip_renumbers_to_13(self, q1_scheduled):
+        ov = Override(type="skip", course_id="RD010001E3", date="2026-04-15")
+        result = sorted(apply_overrides(list(q1_scheduled), [ov]), key=lambda s: (s.date, s.period))
+        assert len(result) == 13
+        assert [s.session_key for s in result] == [f"{n:02d}" for n in range(1, 14)]

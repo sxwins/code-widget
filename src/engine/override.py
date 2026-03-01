@@ -87,13 +87,21 @@ def _apply_reschedule(scheduled: list[ScheduledClass], ov: Override) -> list[Sch
 
 
 def _reassign_session_keys(scheduled: list[ScheduledClass]) -> list[ScheduledClass]:
-    """Renumber session_keys "01","02",... per (course_id, slot_index) in date order."""
-    groups: dict[tuple[str, int], list[ScheduledClass]] = {}
+    """Renumber session_keys "01","02",... per course in (date, period) order.
+
+    Single-slot courses: group by (course_id, slot_index) — unchanged behaviour.
+    Multi-slot courses (any slot_index > 0): group ALL slots by course_id so
+    both Wednesday and Friday of the same week get consecutive numbers.
+    """
+    multi_slot_courses = {sc.course_id for sc in scheduled if sc.slot_index > 0}
+
+    groups: dict = {}
     for sc in scheduled:
-        groups.setdefault((sc.course_id, sc.slot_index), []).append(sc)
+        key = sc.course_id if sc.course_id in multi_slot_courses else (sc.course_id, sc.slot_index)
+        groups.setdefault(key, []).append(sc)
 
     for group in groups.values():
-        group.sort(key=lambda s: s.date)
+        group.sort(key=lambda s: (s.date, s.period))
         for i, sc in enumerate(group):
             sc.session_key = f"{i + 1:02d}"
 

@@ -292,7 +292,7 @@ class RescheduleDialog(QDialog):
         # Row 5: 時刻 (shown only when カスタム)
         self._time_edit = QLineEdit()
         self._time_edit.setPlaceholderText("HH:MM")
-        self._form.addRow("時刻:", self._time_edit)
+        self._form.addRow("開始時刻:", self._time_edit)
         self._form.setRowVisible(5, False)
 
         layout.addLayout(self._form)
@@ -484,13 +484,16 @@ class ConfigDialog(QDialog):
         btn_add = QPushButton("追加")
         btn_edit = QPushButton("編集")
         btn_del = QPushButton("削除")
+        btn_conflict = QPushButton("衝突検出")
         btn_add.clicked.connect(self._on_add_course)
         btn_edit.clicked.connect(self._on_edit_course)
         btn_del.clicked.connect(self._on_delete_course)
+        btn_conflict.clicked.connect(self._on_check_conflicts)
         btn_layout.addWidget(btn_add)
         btn_layout.addWidget(btn_edit)
         btn_layout.addWidget(btn_del)
         btn_layout.addStretch()
+        btn_layout.addWidget(btn_conflict)
         layout.addLayout(btn_layout)
 
     def _build_preview_tab(self) -> None:
@@ -766,6 +769,36 @@ class ConfigDialog(QDialog):
         if answer == QMessageBox.StandardButton.Yes:
             self.teacher_config.courses.pop(row)
             self._populate_courses_table()
+
+    def _on_check_conflicts(self) -> None:
+        from collections import defaultdict
+        from engine.override import apply_overrides
+
+        # Build all sessions for all courses
+        slot_map: dict = defaultdict(list)
+        for course in self.teacher_config.courses:
+            try:
+                base = resolve_course_schedule(course, self.school_config)
+                overrides = [ov for ov in self.teacher_config.overrides if ov.course_id == course.id]
+                sessions = apply_overrides(base, overrides)
+            except (ValueError, KeyError):
+                continue
+            for sc in sessions:
+                key = (sc.date, sc.custom_start if sc.custom_start else sc.period)
+                slot_map[key].append(sc)
+
+        conflicts = {k: v for k, v in slot_map.items() if len(v) > 1}
+
+        if conflicts:
+            lines = []
+            for (d, period_key), sessions in sorted(conflicts.items()):
+                period_str = period_key if isinstance(period_key, str) else f"{period_key}限"
+                names = "、".join(f"{sc.course_name}（第{sc.session_key}回）" for sc in sessions)
+                lines.append(f"・{d}  {period_str}:  {names}")
+            QMessageBox.warning(self, "衝突検出",
+                                "以下の授業が同じ時間帯に重複しています：\n\n" + "\n".join(lines))
+        else:
+            QMessageBox.information(self, "衝突検出", "衝突は検出されませんでした。")
 
     def _on_add_adjustment(self) -> None:
         dlg = RescheduleDialog(self.school_config, self.teacher_config, parent=self)

@@ -25,6 +25,7 @@ class AttendanceWindow(QWidget):
 
     position_changed = Signal(int, int)
     open_settings = Signal()
+    code_entered = Signal(str, str)  # (code_key, code_value)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         flags = (
@@ -46,6 +47,9 @@ class AttendanceWindow(QWidget):
         self._drag_active = False
         self._drag_offset_x = 0
         self._drag_offset_y = 0
+
+        # Current scheduled class (used when emitting code_entered)
+        self._current_sc = None
 
         # --- Top row: small icon + course label + session label ---
         self._icon_label = QLabel()
@@ -138,6 +142,9 @@ class AttendanceWindow(QWidget):
 
     def _on_editing_finished(self) -> None:
         self.code_edit.setReadOnly(True)
+        if self._current_sc is not None:
+            key = f"{self._current_sc.course_id}_{self._current_sc.session_key}"
+            self.code_entered.emit(key, self.code_edit.text())
 
     def _on_clear_btn(self) -> None:
         self.code_edit.clear()
@@ -167,6 +174,7 @@ class AttendanceWindow(QWidget):
 
     def update_class(self, sc: ScheduledClass, code: str = "") -> None:
         """Populate course name, session key, and attendance code."""
+        self._current_sc = sc
         self.label_course.setText(sc.course_name)
         self.label_session.setText(f"第{sc.session_key}回")
         self.code_edit.setText(code)

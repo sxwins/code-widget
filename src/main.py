@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import timedelta
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, QTimer
@@ -62,6 +63,9 @@ def main():
     all_scheduled = _build_all_scheduled(teacher_config, school_config)
     _last_active = [None]  # mutable list used as closure cell
 
+    # Temporary codes: key -> (code, expiry_datetime); in-memory only, not persisted
+    _temp_codes: dict = {}
+
     # Create widgets
     win = AttendanceWindow()
     tray = TrayIcon(attendance_window=win)
@@ -111,8 +115,19 @@ def main():
     tray.open_config.connect(open_config)
     win.open_settings.connect(open_config)
 
+    def on_temp_code_entered(key: str, code: str) -> None:
+        _temp_codes[key] = (code, now() + timedelta(minutes=30))
+
+    win.code_entered.connect(on_temp_code_entered)
+
     def _code_for(sc: ScheduledClass) -> str:
-        return teacher_config.attendance_codes.get(f"{sc.course_id}_{sc.session_key}", "")
+        key = f"{sc.course_id}_{sc.session_key}"
+        if key in _temp_codes:
+            temp_code, expiry = _temp_codes[key]
+            if now() < expiry:
+                return temp_code
+            del _temp_codes[key]
+        return teacher_config.attendance_codes.get(key, "")
 
     # Toggle window
     def toggle_window():

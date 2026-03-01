@@ -1,12 +1,20 @@
 """icon.py — app icon loader."""
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QPixmap
 
-_ICON_PATH = Path(__file__).parent.parent / "assets" / "icon.png"
+
+def _icon_path() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys._MEIPASS) / "assets" / "icon.png"  # type: ignore[attr-defined]
+    return Path(__file__).parent.parent / "assets" / "icon.png"
+
+
+_ICON_PATH = _icon_path()
 
 
 def make_icon(size: int = 32) -> QIcon:

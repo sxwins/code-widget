@@ -73,14 +73,29 @@
 - 新增 CLAUDE.md（项目配置）
 - 测试：31 个测试全部通过（22 engine + 3 attendance + 3 config + 3 tray）
 
+## Phase 4+ 追加実装（2026-03-01〜03-02）
+
+Phase 4 完成後に追加した機能（38 tests passing）:
+- 出席コードキー変更: `{course_id}_{date}` → `{course_id}_{session_key}`
+- 外観タブ（コードフォント・色・背景・ボーダー + 科目名フォント設定）
+- 保存後ダイアログを閉じない（QTimer フィードバック）
+- 调整タブ: 行選択 + 追加/編集/削除ボタン（courses タブと同パターン）
+- プレビューで `{n}限` 表示
+- Q1 課 session_key バグ修正: `_reassign_session_keys` でマルチスロットコースを course_id でグループ化
+- アイコン: 実際の PNG ファイル使用 (src/assets/icon.png)
+- 丸角ウィンドウ（WA_TranslucentBackground + 丸角矩形描画）
+- 一時コード機能（右クリック入力→30分有効、_temp_codes, code_entered/code_cleared シグナル）
+- 衝突検出ボタン（時間窓オーバーラップ判定）
+- 調整ダイアログ: 元日時行削除、開始時刻ラベル
+
 ## 5-Question Reboot Check
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 5: 打包与分发（pending） |
+| Where am I? | Phase 5: 打包与分发（開始） |
 | Where am I going? | Phase 5: PyInstaller 打包 → Phase 6: 测试与验收 |
-| What's the goal? | 开发出勤码展示工具：置顶小窗、按课表自动提示、支持调整、打包为独立 exe/app |
-| What have I learned? | 见 findings.md + docs/plans/；完整实现已完成，31 tests passing |
-| What have I done? | Phase 1-4 完成：需求→架构→核心逻辑→GUI 全部实现 |
+| What's the goal? | 开发出勤码展示工具：置顶小窗、按课表自动提示、支持调整、打包为独立 exe |
+| What have I learned? | 見 findings.md；完整実装済み、38 tests passing |
+| What have I done? | Phase 1-4 完成 + Phase 4+ 追加機能実装 |
 
 ---
 *Update after completing each phase or encountering errors*

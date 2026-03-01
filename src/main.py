@@ -25,9 +25,34 @@ from models.teacher_config import (
 )
 from utils.time_utils import now
 
-SCHOOL_CONFIG_PATH = Path(__file__).parent.parent / "config" / "school_config.json"
-DEFAULT_TEACHER_CONFIG = Path(__file__).parent.parent / "config" / "邵_teacher_config.json"
+def _resource(rel: str) -> Path:
+    """Bundled read-only resource path (works in dev and PyInstaller onefile)."""
+    if getattr(sys, "frozen", False):
+        return Path(sys._MEIPASS) / rel  # type: ignore[attr-defined]
+    return Path(__file__).parent.parent / rel
+
+
+def _user_data_dir() -> Path:
+    """Writable directory next to the EXE (or project root in dev)."""
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).parent
+    return Path(__file__).parent.parent
+
+
+SCHOOL_CONFIG_PATH = _resource("config/school_config.json")
+DEFAULT_TEACHER_CONFIG = _user_data_dir() / "config" / "邵_teacher_config.json"
 TICK_MS = 30_000  # 30 seconds
+
+
+def _ensure_user_config(teacher_path: Path) -> None:
+    """On first run, copy bundled teacher config template next to the EXE."""
+    if teacher_path.exists():
+        return
+    teacher_path.parent.mkdir(parents=True, exist_ok=True)
+    template = _resource("config/邵_teacher_config.json")
+    if template.exists():
+        import shutil
+        shutil.copy(template, teacher_path)
 
 
 def _build_all_scheduled(teacher_config: TeacherConfig, school_config: SchoolConfig) -> list[ScheduledClass]:
@@ -50,6 +75,7 @@ def main():
     # Load configs
     settings = QSettings()
     teacher_path = Path(settings.value("teacher_config_path", str(DEFAULT_TEACHER_CONFIG)))
+    _ensure_user_config(teacher_path)
     try:
         school_config = load_school_config(SCHOOL_CONFIG_PATH)
         teacher_config = load_teacher_config(teacher_path)

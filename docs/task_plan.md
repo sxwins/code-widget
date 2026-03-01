@@ -4,7 +4,7 @@
 开发一个轻量级桌面工具，帮助教师在上课前后自动弹出置顶小窗展示出勤码，支持按学期课表智能提示、手动输入码、以及停课/补课/调课调整，打包为 Windows/macOS 独立可执行文件。
 
 ## Current Phase
-Phase 5: 打包与分发
+Phase 6: 测试与验收
 
 ## Phases
 
@@ -42,10 +42,11 @@ Phase 5: 打包与分发
 - **Status:** complete
 
 ### Phase 5: 打包与分发
-- [ ] Windows：PyInstaller 打包为独立 .exe
-- [ ] macOS：打包为独立 .app
-- [ ] 测试打包后运行
-- **Status:** pending
+- [x] Windows：PyInstaller 打包为独立 .exe（onefile + windowed）
+- [x] 在 pyproject.toml 添加 PyInstaller 为 dev 依赖
+- [x] 创建 CodeWidget.spec（含 config/ assets/ 数据文件）
+- [x] 测试打包后运行（EXE 可独立启动，config/ 同目录自动生成）
+- **Status:** complete
 
 ### Phase 6: 测试与验收
 - [ ] 验证全部 7 条验收标准（requirements.md §12）

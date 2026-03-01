@@ -69,6 +69,9 @@ def main():
     if teacher_config.window_position:
         win.move(teacher_config.window_position.x, teacher_config.window_position.y)
 
+    # Show window on startup
+    win.show()
+
     # Save position when dragged
     def on_position_changed(x: int, y: int):
         if teacher_config.window_position is None:

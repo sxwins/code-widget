@@ -29,8 +29,18 @@ def test_courses_tab_row_count(qtbot, school, teacher):
     from gui.config_dialog import ConfigDialog
     dlg = ConfigDialog(school_config=school, teacher_config=teacher)
     qtbot.addWidget(dlg)
-    # 邵_teacher_config has 14 non-intensive courses
-    assert dlg.courses_table.rowCount() == 14
+    assert dlg.courses_table.columnCount() == 5
+
+
+def test_year_column(qtbot, school, teacher):
+    from gui.config_dialog import ConfigDialog
+    dlg = ConfigDialog(school_config=school, teacher_config=teacher)
+    qtbot.addWidget(dlg)
+    # Year column (index 2) should contain "2026" for all non-intensive courses
+    for row in range(dlg.courses_table.rowCount()):
+        year_item = dlg.courses_table.item(row, 2)
+        assert year_item is not None
+        assert year_item.text() == "2026"
 
 
 def test_tab_count(qtbot, school, teacher):
@@ -38,3 +48,15 @@ def test_tab_count(qtbot, school, teacher):
     dlg = ConfigDialog(school_config=school, teacher_config=teacher)
     qtbot.addWidget(dlg)
     assert dlg.tabs.count() == 3
+
+
+def test_adj_tab_single_button(qtbot, school, teacher):
+    from gui.config_dialog import ConfigDialog
+    from PySide6.QtWidgets import QPushButton
+    dlg = ConfigDialog(school_config=school, teacher_config=teacher)
+    qtbot.addWidget(dlg)
+    # Adj tab should have exactly 2 buttons: 調整を追加 and 削除
+    buttons = dlg._tab_adj.findChildren(QPushButton)
+    assert len(buttons) == 2
+    labels = {btn.text() for btn in buttons}
+    assert labels == {"調整を追加", "削除"}

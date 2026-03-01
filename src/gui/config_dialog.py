@@ -4,14 +4,18 @@ from __future__ import annotations
 import copy
 from pathlib import Path
 
-from PySide6.QtCore import Signal
+import re
+
+from PySide6.QtCore import QDate, Signal
 from PySide6.QtWidgets import (
     QComboBox,
+    QDateEdit,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
     QHBoxLayout,
     QHeaderView,
+    QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
@@ -23,7 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.override import apply_overrides
-from engine.scheduler import resolve_course_schedule
+from engine.scheduler import ScheduledClass, resolve_course_schedule
 from models.school_config import SchoolConfig
 from models.teacher_config import (
     Course,
@@ -192,69 +196,65 @@ class CourseEditDialog(QDialog):
         self.accept()
 
 
-class OverrideEditDialog(QDialog):
-    """Dialog for adding a skip, makeup, or reschedule override."""
+class RescheduleDialog(QDialog):
+    """Dialog for adding a reschedule (time adjustment) override."""
 
     def __init__(
         self,
-        ov_type: str,
-        courses: list[Course],
+        school_config: SchoolConfig,
+        teacher_config: TeacherConfig,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self.ov_type = ov_type
-        self.courses = courses
+        self.school_config = school_config
+        self.teacher_config = teacher_config
         self.result_override: Override | None = None
+        self._sessions: list[ScheduledClass] = []
 
-        titles = {"skip": "休講を追加", "makeup": "補講を追加", "reschedule": "調課を追加"}
-        self.setWindowTitle(titles.get(ov_type, "調整を追加"))
+        self.setWindowTitle("調整を追加")
         self._build_ui()
 
     def _build_ui(self) -> None:
         layout = QVBoxLayout(self)
-        form = QFormLayout()
+        self._form = QFormLayout()
 
-        # 授業
+        # Row 0: 授業
         self._course_combo = QComboBox()
-        for c in self.courses:
+        for c in self.teacher_config.courses:
             self._course_combo.addItem(c.name, userData=c.id)
-        form.addRow("授業:", self._course_combo)
+        self._course_combo.currentIndexChanged.connect(self._on_course_changed)
+        self._form.addRow("授業:", self._course_combo)
 
-        # Date fields
-        self._date_edit: QLineEdit | None = None
-        self._new_date_edit: QLineEdit | None = None
-        self._period_combo: QComboBox | None = None
+        # Row 1: 対象回
+        self._session_combo = QComboBox()
+        self._session_combo.currentIndexChanged.connect(self._on_session_changed)
+        self._form.addRow("対象回:", self._session_combo)
 
-        if self.ov_type == "skip":
-            self._date_edit = QLineEdit()
-            self._date_edit.setPlaceholderText("YYYY-MM-DD")
-            form.addRow("日付:", self._date_edit)
+        # Row 2: 元日時 (readonly)
+        self._orig_label = QLabel()
+        self._form.addRow("元日時:", self._orig_label)
 
-        elif self.ov_type == "makeup":
-            self._new_date_edit = QLineEdit()
-            self._new_date_edit.setPlaceholderText("YYYY-MM-DD")
-            form.addRow("新日付:", self._new_date_edit)
+        # Row 3: 新日付
+        self._new_date_edit = QDateEdit()
+        self._new_date_edit.setCalendarPopup(True)
+        self._new_date_edit.setDisplayFormat("yyyy-MM-dd")
+        self._form.addRow("新日付:", self._new_date_edit)
 
-            self._period_combo = QComboBox()
-            for p in range(1, 7):
-                self._period_combo.addItem(f"{p}限", userData=p)
-            form.addRow("時限:", self._period_combo)
+        # Row 4: 新時限
+        self._period_combo = QComboBox()
+        for p in range(1, 7):
+            self._period_combo.addItem(f"{p}限", userData=p)
+        self._period_combo.addItem("カスタム", userData=None)
+        self._period_combo.currentIndexChanged.connect(self._on_period_changed)
+        self._form.addRow("新時限:", self._period_combo)
 
-        elif self.ov_type == "reschedule":
-            self._date_edit = QLineEdit()
-            self._date_edit.setPlaceholderText("YYYY-MM-DD")
-            form.addRow("元日付:", self._date_edit)
+        # Row 5: 時刻 (shown only when カスタム)
+        self._time_edit = QLineEdit()
+        self._time_edit.setPlaceholderText("HH:MM")
+        self._form.addRow("時刻:", self._time_edit)
+        self._form.setRowVisible(5, False)
 
-            self._new_date_edit = QLineEdit()
-            self._new_date_edit.setPlaceholderText("YYYY-MM-DD")
-            form.addRow("新日付:", self._new_date_edit)
-
-            self._period_combo = QComboBox()
-            for p in range(1, 7):
-                self._period_combo.addItem(f"{p}限", userData=p)
-            form.addRow("時限:", self._period_combo)
-
-        layout.addLayout(form)
+        layout.addLayout(self._form)
 
         btn_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -263,34 +263,88 @@ class OverrideEditDialog(QDialog):
         btn_box.rejected.connect(self.reject)
         layout.addWidget(btn_box)
 
+        if self._course_combo.count() > 0:
+            self._on_course_changed(0)
+
+    def _on_course_changed(self, index: int) -> None:
+        course_id = self._course_combo.itemData(index)
+        course = next((c for c in self.teacher_config.courses if c.id == course_id), None)
+        if course is None:
+            self._sessions = []
+            self._session_combo.clear()
+            return
+        try:
+            sessions = resolve_course_schedule(course, self.school_config)
+            self._sessions = sorted(sessions, key=lambda s: (s.date, s.period))
+        except (ValueError, KeyError):
+            self._sessions = []
+
+        self._session_combo.blockSignals(True)
+        self._session_combo.clear()
+        for i, sc in enumerate(self._sessions):
+            jp_wd = WEEKDAY_JP.get(sc.weekday, sc.weekday)
+            self._session_combo.addItem(f"第{i + 1}回 ({sc.date} {jp_wd}{sc.period}限)")
+        self._session_combo.blockSignals(False)
+
+        if self._sessions:
+            self._on_session_changed(0)
+
+    def _on_session_changed(self, index: int) -> None:
+        if index < 0 or index >= len(self._sessions):
+            return
+        sc = self._sessions[index]
+        jp_wd = WEEKDAY_JP.get(sc.weekday, sc.weekday)
+        self._orig_label.setText(f"{sc.date} {jp_wd}{sc.period}限")
+        self._new_date_edit.setDate(QDate(sc.date.year, sc.date.month, sc.date.day))
+        self._period_combo.setCurrentIndex(sc.period - 1)
+
+    def _on_period_changed(self, index: int) -> None:
+        is_custom = self._period_combo.itemData(index) is None
+        self._form.setRowVisible(5, is_custom)
+
     def _on_accept(self) -> None:
+        session_idx = self._session_combo.currentIndex()
+        if session_idx < 0 or session_idx >= len(self._sessions):
+            QMessageBox.warning(self, "エラー", "授業回を選択してください。")
+            return
+
+        sc = self._sessions[session_idx]
+        original_date = str(sc.date)
+        original_period = sc.period
+
+        new_qdate = self._new_date_edit.date()
+        new_date = f"{new_qdate.year():04d}-{new_qdate.month():02d}-{new_qdate.day():02d}"
+
+        period_data = self._period_combo.currentData()
+        is_custom = period_data is None
+
+        if is_custom:
+            custom_time = self._time_edit.text().strip()
+            if not custom_time:
+                QMessageBox.warning(self, "入力エラー", "時刻を入力してください。")
+                return
+            if not re.match(r"^\d{2}:\d{2}$", custom_time):
+                QMessageBox.warning(self, "入力エラー", "時刻はHH:MM形式で入力してください。")
+                return
+            new_period = None
+            new_start_time = custom_time
+        else:
+            new_period = period_data
+            new_start_time = ""
+            if new_date == original_date and new_period == original_period:
+                QMessageBox.warning(self, "変更なし", "変更がありません。")
+                return
+
         course_id = self._course_combo.currentData()
-        date_str = self._date_edit.text().strip() if self._date_edit else ""
-        new_date_str = self._new_date_edit.text().strip() if self._new_date_edit else ""
-        period = self._period_combo.currentData() if self._period_combo else None
-
-        if self.ov_type == "skip":
-            self.result_override = Override(
-                type="skip",
-                course_id=course_id,
-                date=date_str,
-            )
-        elif self.ov_type == "makeup":
-            self.result_override = Override(
-                type="makeup",
-                course_id=course_id,
-                date=self._new_date_edit.text().strip(),
-                period=period,
-            )
-        elif self.ov_type == "reschedule":
-            self.result_override = Override(
-                type="reschedule",
-                course_id=course_id,
-                original_date=date_str,
-                new_date=new_date_str,
-                new_period=period,
-            )
-
+        self.result_override = Override(
+            type="reschedule",
+            course_id=course_id,
+            original_date=original_date,
+            original_period=original_period,
+            new_date=new_date,
+            new_period=new_period,
+            new_start_time=new_start_time,
+        )
         self.accept()
 
 
@@ -364,8 +418,8 @@ class ConfigDialog(QDialog):
     def _build_courses_tab(self) -> None:
         layout = QVBoxLayout(self._tab_courses)
 
-        self.courses_table = QTableWidget(0, 4)
-        self.courses_table.setHorizontalHeaderLabels(["ID", "授業名", "種別", "スロット"])
+        self.courses_table = QTableWidget(0, 5)
+        self.courses_table.setHorizontalHeaderLabels(["ID", "授業名", "年度", "種別", "スロット"])
         self.courses_table.horizontalHeader().setSectionResizeMode(
             1, QHeaderView.ResizeMode.Stretch
         )
@@ -404,26 +458,20 @@ class ConfigDialog(QDialog):
     def _build_adj_tab(self) -> None:
         layout = QVBoxLayout(self._tab_adj)
 
-        self.adj_table = QTableWidget(0, 5)
-        self.adj_table.setHorizontalHeaderLabels(["種別", "授業ID", "元日付", "新日付", "限"])
+        self.adj_table = QTableWidget(0, 4)
+        self.adj_table.setHorizontalHeaderLabels(["授業名", "元日付", "新日付", "新時限"])
         hh = self.adj_table.horizontalHeader()
-        for col in range(5):
+        for col in range(4):
             hh.setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
         self.adj_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         layout.addWidget(self.adj_table)
 
         btn_layout = QHBoxLayout()
-        btn_skip = QPushButton("休講を追加")
-        btn_makeup = QPushButton("補講を追加")
-        btn_reschedule = QPushButton("調課を追加")
+        btn_add = QPushButton("調整を追加")
         btn_del = QPushButton("削除")
-        btn_skip.clicked.connect(lambda: self._on_add_override("skip"))
-        btn_makeup.clicked.connect(lambda: self._on_add_override("makeup"))
-        btn_reschedule.clicked.connect(lambda: self._on_add_override("reschedule"))
+        btn_add.clicked.connect(self._on_add_adjustment)
         btn_del.clicked.connect(self._on_delete_override)
-        btn_layout.addWidget(btn_skip)
-        btn_layout.addWidget(btn_makeup)
-        btn_layout.addWidget(btn_reschedule)
+        btn_layout.addWidget(btn_add)
         btn_layout.addWidget(btn_del)
         btn_layout.addStretch()
         layout.addLayout(btn_layout)
@@ -439,9 +487,12 @@ class ConfigDialog(QDialog):
             self.courses_table.insertRow(row)
             self.courses_table.setItem(row, 0, QTableWidgetItem(course.id))
             self.courses_table.setItem(row, 1, QTableWidgetItem(course.name))
-            self.courses_table.setItem(row, 2, QTableWidgetItem(course.course_type))
+            ct = self.school_config.course_types.get(course.course_type)
+            year = ct.semester_id.split("_")[-1] if ct else ""
+            self.courses_table.setItem(row, 2, QTableWidgetItem(year))
+            self.courses_table.setItem(row, 3, QTableWidgetItem(course.course_type))
             slots_str = ", ".join(_slot_label(s) for s in course.slots)
-            self.courses_table.setItem(row, 3, QTableWidgetItem(slots_str))
+            self.courses_table.setItem(row, 4, QTableWidgetItem(slots_str))
 
     def _populate_preview_combo(self) -> None:
         self.preview_combo.blockSignals(True)
@@ -479,18 +530,21 @@ class ConfigDialog(QDialog):
 
     def _populate_adj_table(self) -> None:
         self.adj_table.setRowCount(0)
+        course_map = {c.id: c.name for c in self.teacher_config.courses}
         for ov in self.teacher_config.overrides:
             row = self.adj_table.rowCount()
             self.adj_table.insertRow(row)
-            self.adj_table.setItem(row, 0, QTableWidgetItem(ov.type))
-            self.adj_table.setItem(row, 1, QTableWidgetItem(ov.course_id))
+            self.adj_table.setItem(row, 0, QTableWidgetItem(course_map.get(ov.course_id, ov.course_id)))
             orig = ov.original_date if ov.type == "reschedule" else ov.date
-            self.adj_table.setItem(row, 2, QTableWidgetItem(orig))
-            self.adj_table.setItem(row, 3, QTableWidgetItem(ov.new_date))
-            period_str = str(ov.new_period) if ov.type == "reschedule" else (
-                str(ov.period) if ov.period is not None else ""
-            )
-            self.adj_table.setItem(row, 4, QTableWidgetItem(period_str))
+            self.adj_table.setItem(row, 1, QTableWidgetItem(orig))
+            self.adj_table.setItem(row, 2, QTableWidgetItem(ov.new_date))
+            if ov.new_start_time:
+                period_str = ov.new_start_time
+            elif ov.new_period is not None:
+                period_str = str(ov.new_period)
+            else:
+                period_str = ""
+            self.adj_table.setItem(row, 3, QTableWidgetItem(period_str))
 
     # ------------------------------------------------------------------
     # Slot handlers
@@ -533,8 +587,8 @@ class ConfigDialog(QDialog):
             self.teacher_config.courses.pop(row)
             self._populate_courses_table()
 
-    def _on_add_override(self, ov_type: str) -> None:
-        dlg = OverrideEditDialog(ov_type, self.teacher_config.courses, parent=self)
+    def _on_add_adjustment(self) -> None:
+        dlg = RescheduleDialog(self.school_config, self.teacher_config, parent=self)
         if dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_override is not None:
             self.teacher_config.overrides.append(dlg.result_override)
             self._populate_adj_table()

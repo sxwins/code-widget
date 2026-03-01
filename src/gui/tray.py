@@ -1,13 +1,12 @@
 """tray.py — system tray icon and context menu."""
 from __future__ import annotations
 
-import os
-
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QAction, QColor, QIcon, QPixmap
+from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from engine.scheduler import ScheduledClass
+from gui.icon import make_icon
 
 
 class TrayIcon(QSystemTrayIcon):
@@ -21,17 +20,7 @@ class TrayIcon(QSystemTrayIcon):
 
         self._attendance_window = attendance_window
 
-        # --- Icon: try assets/icon.png, fall back to a coloured square ---
-        # TODO(phase5): replace path with sys._MEIPASS-aware helper for PyInstaller
-        icon_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "assets", "icon.png"
-        )
-        icon = QIcon(icon_path)
-        if icon.isNull():
-            pix = QPixmap(32, 32)
-            pix.fill(QColor("#0078d4"))
-            icon = QIcon(pix)
-        self.setIcon(icon)
+        self.setIcon(make_icon())
 
         # --- Context menu ---
         menu = QMenu()

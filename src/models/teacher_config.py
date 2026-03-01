@@ -54,6 +54,7 @@ class Appearance:
     code_font_size: int = 72
     code_color: str = "#000000"
     code_bg_color: str = "#ffffff"
+    border_color: str = "#90CAF9"
 
 
 @dataclass
@@ -158,6 +159,7 @@ def save_teacher_config(config: TeacherConfig, path: str | Path) -> None:
             "code_font_size": config.appearance.code_font_size,
             "code_color": config.appearance.code_color,
             "code_bg_color": config.appearance.code_bg_color,
+            "border_color": config.appearance.border_color,
         },
         "window_position": {"x": config.window_position.x, "y": config.window_position.y},
         "settings": {

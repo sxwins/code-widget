@@ -1,11 +1,12 @@
 # attendance_window.py — 出勤码展示小窗
-# 特性：始终置顶、可拖动、醒目大字体显示出勤码、右键菜单（入力/クリア/設定）
+# 特性：始終置顶、可拖动、醒目大字体显示出勤码、右键菜单（入力/クリア/設定/隠す/終了）
 
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QFont, QPalette
+from PySide6.QtGui import QColor, QFont, QPainter, QPalette, QPen, QPixmap
 from PySide6.QtWidgets import (
+    QApplication,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -15,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from engine.scheduler import ScheduledClass
+from gui.icon import make_icon
 from models.teacher_config import Appearance
 
 
@@ -38,12 +40,19 @@ class AttendanceWindow(QWidget):
         self.setPalette(pal)
         self.setAutoFillBackground(True)
 
+        self._border_color = "#90CAF9"
+
         # Drag state
         self._drag_active = False
         self._drag_offset_x = 0
         self._drag_offset_y = 0
 
-        # --- Top row: course label + session label ---
+        # --- Top row: small icon + course label + session label ---
+        self._icon_label = QLabel()
+        pix: QPixmap = make_icon(16).pixmap(16, 16)
+        self._icon_label.setPixmap(pix)
+        self._icon_label.setFixedSize(18, 18)
+
         self.label_course = QLabel("")
         font_course = QFont()
         font_course.setPointSize(11)
@@ -57,6 +66,7 @@ class AttendanceWindow(QWidget):
         self.label_session.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
         top_layout = QHBoxLayout()
+        top_layout.addWidget(self._icon_label)
         top_layout.addWidget(self.label_course, stretch=1)
         top_layout.addWidget(self.label_session)
 
@@ -72,13 +82,25 @@ class AttendanceWindow(QWidget):
         self.code_edit.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.code_edit.editingFinished.connect(self._on_editing_finished)
 
-        # --- Main layout (no buttons — use right-click menu) ---
+        # --- Main layout ---
         main_layout = QVBoxLayout(self)
         main_layout.addLayout(top_layout)
         main_layout.addWidget(self.code_edit)
 
         # Start hidden
         self.hide()
+
+    # ------------------------------------------------------------------
+    # Border
+    # ------------------------------------------------------------------
+
+    def paintEvent(self, event) -> None:
+        super().paintEvent(event)
+        p = QPainter(self)
+        p.setPen(QPen(QColor(self._border_color), 2))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawRect(1, 1, self.width() - 2, self.height() - 2)
+        p.end()
 
     # ------------------------------------------------------------------
     # Context menu (right-click)
@@ -90,6 +112,9 @@ class AttendanceWindow(QWidget):
         action_clear = menu.addAction("クリア")
         menu.addSeparator()
         action_settings = menu.addAction("設定")
+        action_hide = menu.addAction("隠す")
+        menu.addSeparator()
+        action_quit = menu.addAction("終了")
         action = menu.exec(event.globalPos())
         if action == action_input:
             self._on_edit()
@@ -97,6 +122,10 @@ class AttendanceWindow(QWidget):
             self._on_clear_btn()
         elif action == action_settings:
             self.open_settings.emit()
+        elif action == action_hide:
+            self.hide()
+        elif action == action_quit:
+            QApplication.instance().quit()
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -119,7 +148,7 @@ class AttendanceWindow(QWidget):
     # ------------------------------------------------------------------
 
     def apply_appearance(self, appearance: Appearance) -> None:
-        """Apply font, color, and background from Appearance settings."""
+        """Apply font, color, background, and border from Appearance settings."""
         font = QFont(appearance.code_font_family, appearance.code_font_size)
         font.setBold(True)
         self.code_edit.setFont(font)
@@ -129,6 +158,8 @@ class AttendanceWindow(QWidget):
         pal = self.palette()
         pal.setColor(QPalette.ColorRole.Window, QColor(appearance.code_bg_color))
         self.setPalette(pal)
+        self._border_color = appearance.border_color
+        self.update()
 
     def update_class(self, sc: ScheduledClass, code: str = "") -> None:
         """Populate course name, session key, and attendance code."""

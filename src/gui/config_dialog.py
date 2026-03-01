@@ -540,6 +540,13 @@ class ConfigDialog(QDialog):
         self._bg_btn.clicked.connect(self._pick_bg_color)
         form.addRow("背景色:", self._bg_btn)
 
+        # Border color
+        self._border_btn = QPushButton()
+        self._border_btn.setFixedSize(60, 24)
+        self._border_btn.setStyleSheet(f"background-color: {ap.border_color}; border: 1px solid #888;")
+        self._border_btn.clicked.connect(self._pick_border_color)
+        form.addRow("枠色:", self._border_btn)
+
         layout.addLayout(form)
         layout.addStretch()
 
@@ -723,6 +730,12 @@ class ConfigDialog(QDialog):
         if color.isValid():
             self.teacher_config.appearance.code_bg_color = color.name()
             self._bg_btn.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #888;")
+
+    def _pick_border_color(self) -> None:
+        color = QColorDialog.getColor(QColor(self.teacher_config.appearance.border_color), self)
+        if color.isValid():
+            self.teacher_config.appearance.border_color = color.name()
+            self._border_btn.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #888;")
 
     def _on_save(self) -> None:
         self.teacher_config.appearance.code_font_family = self._font_combo.currentFont().family()

@@ -12,6 +12,7 @@ from engine.override import apply_overrides
 from engine.scheduler import get_active_class, resolve_course_schedule, ScheduledClass
 from gui.attendance_window import AttendanceWindow
 from gui.config_dialog import ConfigDialog
+from gui.icon import make_icon
 from gui.tray import TrayIcon
 from models.school_config import SchoolConfig, load_school_config
 from models.teacher_config import (
@@ -43,6 +44,7 @@ def main():
     app.setQuitOnLastWindowClosed(False)
     app.setApplicationName("CodeWidget")
     app.setOrganizationName("CodeWidget")
+    app.setWindowIcon(make_icon())
 
     # Load configs
     settings = QSettings()

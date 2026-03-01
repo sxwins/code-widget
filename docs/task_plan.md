@@ -4,7 +4,7 @@
 开发一个轻量级桌面工具，帮助教师在上课前后自动弹出置顶小窗展示出勤码，支持按学期课表智能提示、手动输入码、以及停课/补课/调课调整，打包为 Windows/macOS 独立可执行文件。
 
 ## Current Phase
-Phase 3: 核心逻辑实现
+Phase 5: 打包与分发
 
 ## Phases
 
@@ -25,21 +25,21 @@ Phase 3: 核心逻辑实现
 - **Status:** complete
 
 ### Phase 3: 核心逻辑实现
-- [ ] 数据模型类（SchoolConfig、TeacherConfig、Course、Override）
-- [ ] JSON 配置文件读写（load/save school_config + teacher_config）
-- [ ] 排课引擎：course_type + slot → 授课日期列表（含 Q 系双槽位）
-- [ ] Override 应用：skip / makeup / reschedule 叠加到基础日期列表
-- [ ] 显示窗口判定：当前时间 vs window_start/window_end
-- [ ] 多课冲突消解：选优先显示课程
-- **Status:** in_progress
+- [x] 数据模型类（SchoolConfig、TeacherConfig、Course、Override）
+- [x] JSON 配置文件读写（load/save school_config + teacher_config）
+- [x] 排课引擎：course_type + slot → 授课日期列表（含 Q 系双槽位）
+- [x] Override 应用：skip / makeup / reschedule 叠加到基础日期列表
+- [x] 显示窗口判定：当前时间 vs window_start/window_end
+- [x] 多课冲突消解：选优先显示课程
+- **Status:** complete
 
 ### Phase 4: GUI 实现
-- [ ] 系统托盘 + 主程序生命周期管理
-- [ ] 出勤码展示小窗（置顶、可拖动、醒目大字）
-- [ ] 配置界面（课程录入、学期配置导入）
-- [ ] 授课日预览（第1回～第14回日期表）
-- [ ] 调整管理界面（停课/补课/调课 CRUD）
-- **Status:** pending
+- [x] 系统托盘 + 主程序生命周期管理
+- [x] 出勤码展示小窗（置顶、可拖动、醒目大字）
+- [x] 配置界面（课程录入、学期配置导入）
+- [x] 授课日预览（第1回～第14回日期表）
+- [x] 调整管理界面（停课/补课/调课 CRUD）
+- **Status:** complete
 
 ### Phase 5: 打包与分发
 - [ ] Windows：PyInstaller 打包为独立 .exe

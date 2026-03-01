@@ -54,14 +54,33 @@
   - 确认并文档化完整业务逻辑数据流（findings.md "業務ロジック"）
   - Phase 2 标记为 complete，Phase 3 开始
 
+## Phase 3 完成（2026-03-01）
+
+- 实现 src/models/school_config.py、teacher_config.py
+- 实现 src/engine/scheduler.py（resolve_course_schedule, compute_window, get_active_class）
+- 实现 src/engine/override.py（apply_overrides, _reassign_session_keys）
+- 实现 src/utils/time_utils.py
+- 测试：22 个测试全部通过
+
+## Phase 4 完成（2026-03-01）
+
+- 实现 src/gui/attendance_window.py（AttendanceWindow — 置顶浮窗，72pt 4位出勤码）
+- 实现 src/gui/tray.py（TrayIcon — 系统托盘，菜单，状态提示）
+- 实现 src/gui/config_dialog.py（ConfigDialog — 3标签页：课程/预览/调整）
+- 实现 src/main.py（QApplication + 30s QTimer + 全部 widget 接线）
+- 新增 docs/plans/2026-03-01-phase4-gui-design.md（设计文档）
+- 新增 docs/plans/2026-03-01-phase4-gui-implementation.md（实现计划）
+- 新增 CLAUDE.md（项目配置）
+- 测试：31 个测试全部通过（22 engine + 3 attendance + 3 config + 3 tray）
+
 ## 5-Question Reboot Check
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 3: 核心逻辑实现（in_progress） |
-| Where am I going? | Phase 4: GUI → Phase 5: 打包 → Phase 6: 测试 |
+| Where am I? | Phase 5: 打包与分发（pending） |
+| Where am I going? | Phase 5: PyInstaller 打包 → Phase 6: 测试与验收 |
 | What's the goal? | 开发出勤码展示工具：置顶小窗、按课表自动提示、支持调整、打包为独立 exe/app |
-| What have I learned? | 见 findings.md：完整业务逻辑、数据模型、6种课程类型、实际配置数据 |
-| What have I done? | Phase 1-2 完成：需求分析、架构设计、配置数据填充、业务逻辑确认 |
+| What have I learned? | 见 findings.md + docs/plans/；完整实现已完成，31 tests passing |
+| What have I done? | Phase 1-4 完成：需求→架构→核心逻辑→GUI 全部实现 |
 
 ---
 *Update after completing each phase or encountering errors*

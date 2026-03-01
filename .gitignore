@@ -35,3 +35,6 @@ desktop.ini
 
 # Claude Code 工作目录
 .claude/
+
+# 调试用截图等（不纳入版本控制）
+debug_info/

@@ -767,15 +767,29 @@ class ConfigDialog(QDialog):
     def _on_check_conflicts(self) -> None:
         from collections import defaultdict
 
-        def _start_time(sc: ScheduledClass) -> str:
-            """Return HH:MM start time, normalising period numbers and custom times."""
-            if sc.custom_start:
-                return sc.custom_start
-            period_info = self.school_config.periods.get(str(sc.period))
-            return period_info.start if period_info else str(sc.period)
+        def _to_min(t: str) -> int:
+            h, m = map(int, t.split(":"))
+            return h * 60 + m
 
-        # Build all sessions for all courses with overrides applied
-        slot_map: dict = defaultdict(list)
+        # Compute standard session duration from first school period
+        duration = 90
+        if self.school_config.periods:
+            first = next(iter(self.school_config.periods.values()))
+            d = _to_min(first.end) - _to_min(first.start)
+            if d > 0:
+                duration = d
+
+        def _window(sc: ScheduledClass) -> tuple[int, int]:
+            if sc.custom_start:
+                s = _to_min(sc.custom_start)
+                return (s, s + duration)
+            p = self.school_config.periods.get(str(sc.period))
+            if p:
+                return (_to_min(p.start), _to_min(p.end))
+            return (0, duration)
+
+        # Build all sessions for all courses with overrides applied, grouped by date
+        date_sessions: dict = defaultdict(list)
         for course in self.teacher_config.courses:
             try:
                 base = resolve_course_schedule(course, self.school_config)
@@ -787,17 +801,34 @@ class ConfigDialog(QDialog):
             except (ValueError, KeyError):
                 continue
             for sc in sessions:
-                slot_map[(sc.date, _start_time(sc))].append(sc)
+                date_sessions[sc.date].append(sc)
 
-        conflicts = {k: v for k, v in slot_map.items() if len(v) > 1}
+        # Check every pair on the same date for time-window overlap
+        conflict_lines = []
+        seen_pairs: set = set()
+        for d in sorted(date_sessions):
+            scs = date_sessions[d]
+            for i in range(len(scs)):
+                for j in range(i + 1, len(scs)):
+                    a, b = scs[i], scs[j]
+                    if a.course_id == b.course_id:
+                        continue
+                    wa, wb = _window(a), _window(b)
+                    if wa[0] < wb[1] and wb[0] < wa[1]:  # intervals overlap
+                        pair = (d, min(a.course_id, b.course_id), max(a.course_id, b.course_id))
+                        if pair not in seen_pairs:
+                            seen_pairs.add(pair)
+                            start_str = f"{wa[0] // 60:02d}:{wa[0] % 60:02d}"
+                            conflict_lines.append(
+                                f"・{d}  {start_str}〜:  "
+                                f"{a.course_name}（第{a.session_key}回）と"
+                                f" {b.course_name}（第{b.session_key}回）"
+                            )
 
-        if conflicts:
-            lines = []
-            for (d, t), scs in sorted(conflicts.items()):
-                names = "、".join(f"{sc.course_name}（第{sc.session_key}回）" for sc in scs)
-                lines.append(f"・{d}  {t}:  {names}")
+        if conflict_lines:
             QMessageBox.warning(self, "衝突検出",
-                                "以下の授業が同じ時間帯に重複しています：\n\n" + "\n".join(lines))
+                                "以下の授業が同じ時間帯に重複しています：\n\n"
+                                + "\n".join(conflict_lines))
         else:
             QMessageBox.information(self, "衝突検出", "衝突は検出されませんでした。")
 

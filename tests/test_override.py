@@ -1,2 +1,103 @@
-# test_override.py — 调整规则引擎单元测试
-# 测试：停课/补课/调课应用、回次重排、多规则叠加
+"""Tests for engine.override — skip / makeup / reschedule logic."""
+from datetime import date
+from pathlib import Path
+
+import pytest
+
+from models.school_config import load_school_config
+from models.teacher_config import load_teacher_config, Override
+from engine.scheduler import resolve_course_schedule
+from engine.override import apply_overrides
+
+SCHOOL  = Path(__file__).parent.parent / "config" / "school_config.json"
+TEACHER = Path(__file__).parent.parent / "config" / "邵_teacher_config.json"
+
+
+@pytest.fixture(scope="module")
+def school():
+    return load_school_config(SCHOOL)
+
+
+@pytest.fixture(scope="module")
+def teacher():
+    return load_teacher_config(TEACHER)
+
+
+@pytest.fixture(scope="module")
+def base_scheduled(school, teacher):
+    course = next(c for c in teacher.courses if c.id == "EEE1000411")
+    return resolve_course_schedule(course, school)
+
+
+# ---------------------------------------------------------------------------
+# Skip
+# ---------------------------------------------------------------------------
+
+class TestSkip:
+    def test_skip_removes_one_date(self, base_scheduled):
+        ov     = Override(type="skip", course_id="EEE1000411", date="2026-04-16")
+        result = apply_overrides(base_scheduled, [ov])
+        assert len(result) == 13
+        assert not any(sc.date == date(2026, 4, 16) for sc in result)
+
+    def test_skip_renumbers_from_01(self, base_scheduled):
+        ov     = Override(type="skip", course_id="EEE1000411", date="2026-04-16")
+        result = sorted(apply_overrides(base_scheduled, [ov]), key=lambda s: s.date)
+        assert result[0].session_key  == "01"
+        assert result[-1].session_key == "13"
+
+    def test_skip_wrong_course_no_effect(self, base_scheduled):
+        ov     = Override(type="skip", course_id="OTHER", date="2026-04-16")
+        result = apply_overrides(base_scheduled, [ov])
+        assert len(result) == 14
+
+
+# ---------------------------------------------------------------------------
+# Makeup
+# ---------------------------------------------------------------------------
+
+class TestMakeup:
+    def test_makeup_adds_date(self, base_scheduled):
+        ov     = Override(type="makeup", course_id="EEE1000411", date="2026-08-01", period=1)
+        result = apply_overrides(base_scheduled, [ov])
+        assert len(result) == 15
+        assert any(sc.date == date(2026, 8, 1) for sc in result)
+
+    def test_makeup_session_key_is_last(self, base_scheduled):
+        ov     = Override(type="makeup", course_id="EEE1000411", date="2026-08-01", period=1)
+        result = sorted(apply_overrides(base_scheduled, [ov]), key=lambda s: s.date)
+        assert result[-1].date        == date(2026, 8, 1)
+        assert result[-1].session_key == "15"
+
+
+# ---------------------------------------------------------------------------
+# Reschedule
+# ---------------------------------------------------------------------------
+
+class TestReschedule:
+    def test_reschedule_replaces_date(self, base_scheduled):
+        ov = Override(
+            type="reschedule",
+            course_id="EEE1000411",
+            original_date="2026-04-16",
+            original_period=1,
+            new_date="2026-04-18",
+            new_period=2,
+        )
+        result = apply_overrides(base_scheduled, [ov])
+        assert len(result) == 14
+        assert not any(sc.date == date(2026, 4, 16) for sc in result)
+        assert any(sc.date == date(2026, 4, 18) for sc in result)
+
+    def test_reschedule_new_period(self, base_scheduled):
+        ov = Override(
+            type="reschedule",
+            course_id="EEE1000411",
+            original_date="2026-04-16",
+            original_period=1,
+            new_date="2026-04-18",
+            new_period=2,
+        )
+        result = apply_overrides(base_scheduled, [ov])
+        moved = next(sc for sc in result if sc.date == date(2026, 4, 18))
+        assert moved.period == 2

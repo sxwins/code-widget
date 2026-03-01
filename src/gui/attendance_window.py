@@ -69,6 +69,7 @@ class AttendanceWindow(QWidget):
         self.code_edit.setReadOnly(True)
         self.code_edit.setPlaceholderText("----")
         self.code_edit.setFrame(False)
+        self.code_edit.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.code_edit.editingFinished.connect(self._on_editing_finished)
 
         # --- Main layout (no buttons — use right-click menu) ---

@@ -103,6 +103,7 @@ def main():
         nonlocal all_scheduled
         all_scheduled = _build_all_scheduled(teacher_config, school_config)
         win.apply_appearance(teacher_config.appearance)
+        _last_active[0] = None  # force _tick() to re-evaluate and push new code to window
         _tick()
 
     tray.open_config.connect(open_config)

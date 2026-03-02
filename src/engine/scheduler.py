@@ -1,3 +1,11 @@
+"""scheduler.py — resolve course schedules from school config and compute display windows.
+
+Key concepts:
+  - ScheduledClass: one concrete class occurrence (date + period + session number)
+  - resolve_course_schedule: expands a Course into all its ScheduledClass entries for the semester
+  - compute_window: returns the [window_start, window_end] datetime range for showing the overlay
+  - get_active_class: given the current time, returns whichever class is in its display window
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass

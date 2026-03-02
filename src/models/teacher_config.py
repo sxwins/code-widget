@@ -1,3 +1,11 @@
+"""teacher_config.py — data models and JSON serialisation for teacher-specific configuration.
+
+File layout (邵_teacher_config.json):
+  teacher_name, academic_year, courses[], overrides[], attendance_codes{},
+  appearance{}, window_position{}, settings{}
+
+attendance_codes keys use the format  "{course_id}_{session_key}"  (e.g. "RD010001E3_03").
+"""
 from __future__ import annotations
 
 import json
@@ -162,6 +170,8 @@ def save_teacher_config(config: TeacherConfig, path: str | Path) -> None:
             "code_color": config.appearance.code_color,
             "code_bg_color": config.appearance.code_bg_color,
             "border_color": config.appearance.border_color,
+            "course_font_family": config.appearance.course_font_family,
+            "course_font_size": config.appearance.course_font_size,
         },
         "window_position": {"x": config.window_position.x, "y": config.window_position.y},
         "settings": {

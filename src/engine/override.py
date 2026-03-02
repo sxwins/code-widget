@@ -1,3 +1,10 @@
+"""override.py — apply schedule overrides (skip / makeup / reschedule) to a list of ScheduledClass.
+
+Override types:
+  skip       — remove one session from the schedule
+  makeup     — add an extra session on a new date
+  reschedule — move an existing session to a new date/period
+"""
 from __future__ import annotations
 
 from datetime import date
@@ -29,6 +36,7 @@ def apply_overrides(
 
 
 def _apply_skip(scheduled: list[ScheduledClass], ov: Override) -> list[ScheduledClass]:
+    """Remove all sessions of the course that fall on the override date."""
     skip_date = date.fromisoformat(ov.date)
     return [
         sc for sc in scheduled
@@ -37,6 +45,7 @@ def _apply_skip(scheduled: list[ScheduledClass], ov: Override) -> list[Scheduled
 
 
 def _apply_makeup(scheduled: list[ScheduledClass], ov: Override) -> list[ScheduledClass]:
+    """Append a makeup session on a new date (session_key assigned later by _reassign_session_keys)."""
     ref = next((sc for sc in scheduled if sc.course_id == ov.course_id), None)
     if ref is None:
         return scheduled
@@ -47,13 +56,14 @@ def _apply_makeup(scheduled: list[ScheduledClass], ov: Override) -> list[Schedul
         date=new_date,
         weekday=new_date.strftime("%A"),
         period=ov.period if ov.period is not None else ref.period,
-        session_key="",   # reassigned later
+        session_key="",   # reassigned later by _reassign_session_keys
         slot_index=0,
     )
     return scheduled + [new_sc]
 
 
 def _apply_reschedule(scheduled: list[ScheduledClass], ov: Override) -> list[ScheduledClass]:
+    """Remove the original session and insert a replacement at the new date/period."""
     orig_date = date.fromisoformat(ov.original_date)
     result = [
         sc for sc in scheduled

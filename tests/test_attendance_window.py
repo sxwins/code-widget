@@ -28,14 +28,12 @@ def test_update_class_sets_labels(qtbot, sc):
     assert "07" in win.label_session.text()
 
 
-def test_clear_class_clears_code(qtbot, sc):
+def test_update_class_sets_code(qtbot, sc):
     from gui.attendance_window import AttendanceWindow
     win = AttendanceWindow()
     qtbot.addWidget(win)
-    win.update_class(sc)
-    win.code_edit.setText("1234")
-    win.clear_class()
-    assert win.code_edit.text() == ""
+    win.update_class(sc, "5678")
+    assert win.code_edit.text() == "5678"
 
 
 def test_initial_state_hidden(qtbot):

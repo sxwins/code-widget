@@ -153,12 +153,17 @@ def main():
     win.code_cleared.connect(on_temp_code_cleared)
 
     def _code_for(sc: ScheduledClass) -> str:
+        """Return the attendance code for a session.
+
+        Priority: in-memory temp code (30-min TTL) > saved config code > empty string.
+        Expired temp codes are pruned here on access.
+        """
         key = f"{sc.course_id}_{sc.session_key}"
         if key in _temp_codes:
             temp_code, expiry = _temp_codes[key]
             if now() < expiry:
                 return temp_code
-            del _temp_codes[key]
+            del _temp_codes[key]  # expired — fall through to config code
         return teacher_config.attendance_codes.get(key, "")
 
     # Toggle window
@@ -173,7 +178,8 @@ def main():
 
     tray.toggle_window.connect(toggle_window)
 
-    # Timer tick
+    # Timer tick — called every TICK_MS (30 s) and immediately on startup / config save.
+    # Only acts when the active class changes to avoid redundant UI updates.
     def _tick():
         tc_settings = teacher_config.settings if teacher_config.settings else Settings()
         active = get_active_class(now(), all_scheduled, school_config, tc_settings)

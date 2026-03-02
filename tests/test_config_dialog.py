@@ -47,7 +47,7 @@ def test_tab_count(qtbot, school, teacher):
     from gui.config_dialog import ConfigDialog
     dlg = ConfigDialog(school_config=school, teacher_config=teacher)
     qtbot.addWidget(dlg)
-    assert dlg.tabs.count() == 4
+    assert dlg.tabs.count() == 5  # 授業 / 日程プレビュー / 調整 / 外観 / About
 
 
 def test_adj_tab_buttons(qtbot, school, teacher):

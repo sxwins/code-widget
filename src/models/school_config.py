@@ -1,3 +1,10 @@
+"""school_config.py — data models and JSON loader for school-wide configuration.
+
+File layout (school_config.json):
+  periods{}        — time slots "1"~"6" with start/end "HH:MM"
+  course_types{}   — "spring","autumn","Q1"~"Q4" with semester mapping and session_keys
+  semesters[]      — per-semester class dates indexed by weekday and session number
+"""
 from __future__ import annotations
 
 import json

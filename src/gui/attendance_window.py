@@ -190,14 +190,6 @@ class AttendanceWindow(QWidget):
         self.code_edit.setText(code)
         self.code_edit.setReadOnly(True)
 
-    def clear_class(self) -> None:
-        """Clear all displayed data and hide the window."""
-        self.label_course.setText("")
-        self.label_session.setText("")
-        self.code_edit.clear()
-        self.code_edit.setReadOnly(True)
-        self.hide()
-
     # ------------------------------------------------------------------
     # Drag support
     # ------------------------------------------------------------------

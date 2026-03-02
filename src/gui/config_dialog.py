@@ -1,4 +1,4 @@
-"""ConfigDialog — three-tab configuration dialog for teacher config."""
+"""ConfigDialog — configuration dialog for teacher config (courses / preview / adjustments / appearance / about)."""
 from __future__ import annotations
 
 import copy
@@ -6,7 +6,7 @@ import random
 import re
 from pathlib import Path
 
-from PySide6.QtCore import QDate, QTimer, Signal
+from PySide6.QtCore import QDate, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QColorDialog,
@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
 
 from engine.override import apply_overrides
 from engine.scheduler import ScheduledClass, resolve_course_schedule
+from gui.icon import make_icon
 from models.school_config import SchoolConfig
 from models.teacher_config import (
     Appearance,
@@ -42,6 +43,10 @@ from models.teacher_config import (
     TeacherConfig,
     save_teacher_config,
 )
+
+APP_VERSION = "1.0.0"
+APP_RELEASE_DATE = "2026-03-02"
+APP_AUTHOR = "Xiaowei SHAO"
 
 WEEKDAY_JP = {
     "Monday": "月",
@@ -436,6 +441,11 @@ class ConfigDialog(QDialog):
         self.tabs.addTab(self._tab_appearance, "外観")
         self._build_appearance_tab()
 
+        # Tab 5: About
+        self._tab_about = QWidget()
+        self.tabs.addTab(self._tab_about, "About")
+        self._build_about_tab()
+
         # Footer buttons
         footer = QHBoxLayout()
         self._btn_save = QPushButton("保存")
@@ -605,6 +615,55 @@ class ConfigDialog(QDialog):
         form.addRow("サイズ:", self._course_size_spin)
 
         layout.addLayout(form)
+        layout.addStretch()
+
+    def _build_about_tab(self) -> None:
+        layout = QVBoxLayout(self._tab_about)
+        layout.setContentsMargins(24, 32, 24, 24)
+        layout.setSpacing(6)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+
+        # App icon
+        icon_label = QLabel()
+        icon_label.setPixmap(make_icon(64).pixmap(64, 64))
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(icon_label)
+
+        layout.addSpacing(8)
+
+        # App name
+        name_label = QLabel("CodeWidget")
+        font_name = QFont()
+        font_name.setPointSize(18)
+        font_name.setBold(True)
+        name_label.setFont(font_name)
+        name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(name_label)
+
+        # Description
+        desc_label = QLabel("出勤码展示工具")
+        font_desc = QFont()
+        font_desc.setPointSize(10)
+        desc_label.setFont(font_desc)
+        desc_label.setStyleSheet("color: #555;")
+        desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(desc_label)
+
+        layout.addSpacing(20)
+
+        # Info table
+        info_label = QLabel(
+            "<table cellspacing='5'>"
+            f"<tr><td align='right'><b>バージョン</b></td><td>&nbsp;v{APP_VERSION}</td></tr>"
+            f"<tr><td align='right'><b>リリース日</b></td><td>&nbsp;{APP_RELEASE_DATE}</td></tr>"
+            f"<tr><td align='right'><b>作者</b></td><td>&nbsp;{APP_AUTHOR}</td></tr>"
+            "<tr><td align='right'><b>技術</b></td><td>&nbsp;Python 3.12 + PySide6</td></tr>"
+            "<tr><td align='right'><b>開発補助</b></td><td>&nbsp;Claude Code (Anthropic)</td></tr>"
+            "</table>"
+        )
+        info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(info_label)
+
         layout.addStretch()
 
     # ------------------------------------------------------------------

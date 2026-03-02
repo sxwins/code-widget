@@ -34,9 +34,19 @@ def _resource(rel: str) -> Path:
 
 
 def _user_data_dir() -> Path:
-    """Writable directory next to the EXE (or project root in dev)."""
+    """Writable directory next to the EXE / .app bundle (or project root in dev).
+
+    On macOS the frozen executable lives inside the .app bundle at
+    ``CodeWidget.app/Contents/MacOS/CodeWidget``, so we walk up four levels to
+    reach the folder that *contains* the .app, keeping config/ alongside the
+    bundle the same way it sits alongside the Windows EXE.
+    """
     if getattr(sys, "frozen", False):
-        return Path(sys.executable).parent
+        exe = Path(sys.executable)
+        if sys.platform == "darwin" and exe.parent.name == "MacOS":
+            # .app/Contents/MacOS/CodeWidget → go up 4 levels → parent of .app
+            return exe.parent.parent.parent.parent
+        return exe.parent
     return Path(__file__).parent.parent
 
 

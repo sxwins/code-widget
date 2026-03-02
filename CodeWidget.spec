@@ -2,8 +2,9 @@
 """
 PyInstaller spec for CodeWidget.
 
-Output: dist/CodeWidget.exe  (single-file, windowed, no console)
-Run with:  uv run pyinstaller CodeWidget.spec
+Windows output: dist/CodeWidget.exe   (single-file, windowed, no console)
+macOS output:   dist/CodeWidget.app   (app bundle, tray-only, no Dock icon)
+Run with:  uv run pyinstaller CodeWidget.spec --clean
 """
 
 import sys
@@ -34,6 +35,10 @@ a = Analysis(
 
 pyz = PYZ(a.pure)
 
+import sys as _sys
+
+_icon = str(ROOT / "src" / "assets" / ("icon.icns" if _sys.platform == "darwin" else "icon.ico"))
+
 exe = EXE(
     pyz,
     a.scripts,
@@ -53,5 +58,20 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=str(ROOT / "src" / "assets" / "icon.ico"),
+    icon=_icon,
 )
+
+# macOS: wrap EXE in a .app bundle
+if _sys.platform == "darwin":
+    app = BUNDLE(
+        exe,
+        name="CodeWidget.app",
+        icon=str(ROOT / "src" / "assets" / "icon.icns"),
+        bundle_identifier="com.sxwins.codewidget",
+        info_plist={
+            "LSUIElement": True,             # hide from Dock (tray-only app)
+            "NSHighResolutionCapable": True,
+            "CFBundleShortVersionString": "1.0.0",
+            "CFBundleVersion": "1.0.0",
+        },
+    )

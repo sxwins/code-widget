@@ -39,9 +39,24 @@ def _user_data_dir() -> Path:
     return Path(__file__).parent.parent
 
 
-SCHOOL_CONFIG_PATH = _resource("config/school_config.json")
+SCHOOL_CONFIG_PATH = _user_data_dir() / "config" / "school_config.json"
 DEFAULT_TEACHER_CONFIG = _user_data_dir() / "config" / "邵_teacher_config.json"
 TICK_MS = 30_000  # 30 seconds
+
+
+def _ensure_school_config(school_path: Path) -> None:
+    """On first run, copy bundled school config template next to the EXE.
+
+    school_config.json is placed in the writable config/ directory so it can
+    be replaced each academic year without rebuilding the EXE.
+    """
+    if school_path.exists():
+        return
+    school_path.parent.mkdir(parents=True, exist_ok=True)
+    template = _resource("config/school_config.json")
+    if template.exists():
+        import shutil
+        shutil.copy(template, school_path)
 
 
 def _ensure_user_config(teacher_path: Path) -> None:
@@ -74,6 +89,7 @@ def main():
 
     # Load configs
     settings = QSettings()
+    _ensure_school_config(SCHOOL_CONFIG_PATH)
     teacher_path = Path(settings.value("teacher_config_path", str(DEFAULT_TEACHER_CONFIG)))
     _ensure_user_config(teacher_path)
     try:

@@ -40,7 +40,7 @@ def _user_data_dir() -> Path:
 
 
 SCHOOL_CONFIG_PATH = _user_data_dir() / "config" / "school_config.json"
-DEFAULT_TEACHER_CONFIG = _user_data_dir() / "config" / "邵_teacher_config.json"
+DEFAULT_TEACHER_CONFIG = _user_data_dir() / "config" / "teacher_config.json"
 TICK_MS = 30_000  # 30 seconds
 
 
@@ -64,7 +64,7 @@ def _ensure_user_config(teacher_path: Path) -> None:
     if teacher_path.exists():
         return
     teacher_path.parent.mkdir(parents=True, exist_ok=True)
-    template = _resource("config/邵_teacher_config.json")
+    template = _resource("config/teacher_config.json")
     if template.exists():
         import shutil
         shutil.copy(template, teacher_path)

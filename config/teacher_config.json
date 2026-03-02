@@ -1,38 +1,22 @@
 {
-  "_comment": "教师个人配置 — 请填写真实课程信息",
-  "_slots_note": "slots: 春/秋 填1个槽位; Q1~Q4 填2个槽位（顺序任意）",
-
   "teacher_name": "",
-
-  "courses": [
-    {
-      "_example_spring": "春セメスター课程示例：周三第3限",
-      "id": "course_001",
-      "name": "（课程名）",
-      "course_type": "spring",
-      "slots": [
-        {"weekday": "Wednesday", "period": 3}
-      ]
-    },
-    {
-      "_example_Q1": "Q1课程示例：周三第2限 + 周五第3限，春学期前7回",
-      "id": "course_002",
-      "name": "（课程名）",
-      "course_type": "Q1",
-      "slots": [
-        {"weekday": "Wednesday", "period": 2},
-        {"weekday": "Friday",    "period": 3}
-      ]
-    }
-  ],
-
+  "academic_year": "2026",
+  "courses": [],
   "overrides": [],
-
+  "attendance_codes": {},
+  "appearance": {
+    "code_font_family": "Courier New",
+    "code_font_size": 72,
+    "code_color": "#000000",
+    "code_bg_color": "#ffffff",
+    "border_color": "#90CAF9",
+    "course_font_family": "",
+    "course_font_size": 11,
+    "window_scale": 100
+  },
   "window_position": {"x": 100, "y": 100},
-
   "settings": {
-    "pre_class_minutes":  10,
-    "post_class_minutes": 30,
-    "standby_on_no_class": true
+    "pre_class_minutes": 10,
+    "post_class_minutes": 30
   }
 }

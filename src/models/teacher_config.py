@@ -65,6 +65,7 @@ class Appearance:
     border_color: str = "#90CAF9"
     course_font_family: str = ""
     course_font_size: int = 11
+    window_scale: int = 100  # percentage (30–300); scales the attendance window size
 
 
 @dataclass
@@ -172,6 +173,7 @@ def save_teacher_config(config: TeacherConfig, path: str | Path) -> None:
             "border_color": config.appearance.border_color,
             "course_font_family": config.appearance.course_font_family,
             "course_font_size": config.appearance.course_font_size,
+            "window_scale": config.appearance.window_scale,
         },
         "window_position": {"x": config.window_position.x, "y": config.window_position.y},
         "settings": {

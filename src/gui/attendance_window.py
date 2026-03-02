@@ -20,6 +20,10 @@ from gui.icon import make_icon
 from models.teacher_config import Appearance
 
 
+_BASE_W = 300  # base window width at 100% scale
+_BASE_H = 125  # base window height at 100% scale
+
+
 class AttendanceWindow(QWidget):
     """Floating widget that displays attendance code for a scheduled class."""
 
@@ -36,7 +40,7 @@ class AttendanceWindow(QWidget):
         )
         super().__init__(parent, flags)
 
-        self.setFixedSize(300, 125)
+        self.setFixedSize(_BASE_W, _BASE_H)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         self._bg_color = QColor("white")
@@ -167,7 +171,7 @@ class AttendanceWindow(QWidget):
     # ------------------------------------------------------------------
 
     def apply_appearance(self, appearance: Appearance) -> None:
-        """Apply font, color, background, and border from Appearance settings."""
+        """Apply font, color, background, border, and window scale from Appearance settings."""
         font = QFont(appearance.code_font_family, appearance.code_font_size)
         font.setBold(True)
         self.code_edit.setFont(font)
@@ -180,6 +184,10 @@ class AttendanceWindow(QWidget):
             course_font = QFont(appearance.course_font_family, appearance.course_font_size)
             course_font.setBold(True)
             self.label_course.setFont(course_font)
+        # Scale window dimensions; corner radius scales proportionally
+        scale = appearance.window_scale / 100.0
+        self.setFixedSize(int(_BASE_W * scale), int(_BASE_H * scale))
+        self._corner_radius = max(4, int(12 * scale))
         self.update()
 
     def update_class(self, sc: ScheduledClass, code: str = "") -> None:

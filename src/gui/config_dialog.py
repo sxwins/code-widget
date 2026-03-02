@@ -620,6 +620,29 @@ class ConfigDialog(QDialog):
         self._course_size_spin.setValue(ap.course_font_size)
         form.addRow("サイズ:", self._course_size_spin)
 
+        # --- ウィンドウサイズ section ---
+        form.addRow(QLabel("<b>ウィンドウサイズ</b>"))
+
+        self._window_scale = ap.window_scale
+        scale_row = QWidget()
+        scale_layout = QHBoxLayout(scale_row)
+        scale_layout.setContentsMargins(0, 0, 0, 0)
+        scale_layout.setSpacing(4)
+        self._btn_scale_minus = QPushButton("−")
+        self._btn_scale_minus.setFixedSize(26, 26)
+        self._scale_label = QLabel(f"{self._window_scale}%")
+        self._scale_label.setFixedWidth(48)
+        self._scale_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._btn_scale_plus = QPushButton("+")
+        self._btn_scale_plus.setFixedSize(26, 26)
+        self._btn_scale_minus.clicked.connect(self._on_scale_minus)
+        self._btn_scale_plus.clicked.connect(self._on_scale_plus)
+        scale_layout.addWidget(self._btn_scale_minus)
+        scale_layout.addWidget(self._scale_label)
+        scale_layout.addWidget(self._btn_scale_plus)
+        scale_layout.addStretch()
+        form.addRow("サイズ:", scale_row)
+
         layout.addLayout(form)
         layout.addStretch()
 
@@ -743,6 +766,8 @@ class ConfigDialog(QDialog):
         course_family = ap.course_font_family or QFont().family()
         self._course_font_combo.setCurrentFont(QFont(course_family))
         self._course_size_spin.setValue(ap.course_font_size)
+        self._window_scale = ap.window_scale
+        self._scale_label.setText(f"{self._window_scale}%")
 
     # ------------------------------------------------------------------
     # Population helpers
@@ -1057,11 +1082,20 @@ class ConfigDialog(QDialog):
             self.teacher_config.appearance.border_color = color.name()
             self._border_btn.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #888;")
 
+    def _on_scale_minus(self) -> None:
+        self._window_scale = max(30, self._window_scale - 10)
+        self._scale_label.setText(f"{self._window_scale}%")
+
+    def _on_scale_plus(self) -> None:
+        self._window_scale = min(300, self._window_scale + 10)
+        self._scale_label.setText(f"{self._window_scale}%")
+
     def _on_save(self) -> None:
         self.teacher_config.appearance.code_font_family = self._font_combo.currentFont().family()
         self.teacher_config.appearance.code_font_size = self._size_spin.value()
         self.teacher_config.appearance.course_font_family = self._course_font_combo.currentFont().family()
         self.teacher_config.appearance.course_font_size = self._course_size_spin.value()
+        self.teacher_config.appearance.window_scale = self._window_scale
         if self.save_path is not None:
             save_teacher_config(self.teacher_config, self.save_path)
         self._orig_teacher.__dict__.update(self.teacher_config.__dict__)

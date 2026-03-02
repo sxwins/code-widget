@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import sys
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
@@ -33,11 +35,9 @@ class AttendanceWindow(QWidget):
     code_cleared = Signal(str)       # (code_key)
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        flags = (
-            Qt.WindowType.WindowStaysOnTopHint
-            | Qt.WindowType.FramelessWindowHint
-            | Qt.WindowType.Tool
-        )
+        flags = Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.FramelessWindowHint
+        if sys.platform != "darwin":
+            flags |= Qt.WindowType.Tool  # Windows only: hide from taskbar/Alt+Tab
         super().__init__(parent, flags)
 
         self.setFixedSize(_BASE_W, _BASE_H)

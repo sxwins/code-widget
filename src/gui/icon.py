@@ -22,12 +22,14 @@ def make_icon(size: int = 32) -> QIcon:
     if _ICON_PATH.exists():
         pix = QPixmap(str(_ICON_PATH))
         if not pix.isNull():
-            return QIcon(pix.scaled(
+            icon = QIcon(pix.scaled(
                 size, size,
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             ))
-    # Fallback: draw a simple blue square with '出'
+            if sys.platform == "darwin":
+                icon.setIsMask(True)  # macOS menu bar: treat as template image
+            return icon
     return _draw_fallback(size)
 
 

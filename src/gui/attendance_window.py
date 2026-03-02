@@ -91,10 +91,15 @@ class AttendanceWindow(QWidget):
         self.code_edit.editingFinished.connect(self._on_editing_finished)
 
         # --- Main layout ---
+        # Top row is pinned to the top margin; code_edit is centred in the remaining space
+        # via equal stretches above and below it.
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 8, 10, 6)
-        main_layout.addLayout(top_layout)
+        main_layout.setSpacing(0)
+        main_layout.addLayout(top_layout)   # stuck to top
+        main_layout.addStretch(1)
         main_layout.addWidget(self.code_edit)
+        main_layout.addStretch(1)
 
         # Start hidden
         self.hide()

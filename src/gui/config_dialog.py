@@ -965,6 +965,7 @@ class ConfigDialog(QDialog):
         if dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_course is not None:
             self.teacher_config.courses.append(dlg.result_course)
             self._populate_courses_table()
+            self._populate_preview_combo()
 
     def _on_edit_course(self) -> None:
         row = self.courses_table.currentRow()
@@ -975,6 +976,7 @@ class ConfigDialog(QDialog):
         if dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_course is not None:
             self.teacher_config.courses[row] = dlg.result_course
             self._populate_courses_table()
+            self._populate_preview_combo()
 
     def _on_delete_course(self) -> None:
         row = self.courses_table.currentRow()
@@ -990,6 +992,7 @@ class ConfigDialog(QDialog):
         if answer == QMessageBox.StandardButton.Yes:
             self.teacher_config.courses.pop(row)
             self._populate_courses_table()
+            self._populate_preview_combo()
 
     def _on_check_conflicts(self) -> None:
         """Detect time-window overlaps between different courses on the same day.

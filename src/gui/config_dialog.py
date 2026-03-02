@@ -108,6 +108,7 @@ class CourseEditDialog(QDialog):
     # ------------------------------------------------------------------
 
     def _build_ui(self) -> None:
+        """Construct form: course ID, name, type combo, slot row(s), and OK/Cancel buttons."""
         layout = QVBoxLayout(self)
         form = QFormLayout()
 
@@ -183,6 +184,7 @@ class CourseEditDialog(QDialog):
         self._update_slot_visibility(self._type_combo.currentText())
 
     def _on_type_changed(self, text: str) -> None:
+        """Show or hide the second slot row when the course type changes."""
         self._update_slot_visibility(text)
 
     def _update_slot_visibility(self, course_type: str) -> None:
@@ -196,6 +198,7 @@ class CourseEditDialog(QDialog):
             second_row_widget.setVisible(False)
 
     def _on_accept(self) -> None:
+        """Validate inputs, build a Course object, and close the dialog."""
         course_id = self._id_edit.text().strip()
         name = self._name_edit.text().strip()
         if not course_id or not name:
@@ -243,6 +246,7 @@ class RescheduleDialog(QDialog):
             self._prefill(existing_override)
 
     def _prefill(self, ov: Override) -> None:
+        """Pre-fill all form controls from an existing Override for editing."""
         course_idx = self._course_combo.findData(ov.course_id)
         if course_idx >= 0:
             self._course_combo.setCurrentIndex(course_idx)
@@ -263,6 +267,7 @@ class RescheduleDialog(QDialog):
                 self._period_combo.setCurrentIndex(idx)
 
     def _build_ui(self) -> None:
+        """Construct form: course selector, session, new date, new period (+ custom time row)."""
         layout = QVBoxLayout(self)
         self._form = QFormLayout()
 
@@ -311,6 +316,7 @@ class RescheduleDialog(QDialog):
             self._on_course_changed(0)
 
     def _on_course_changed(self, index: int) -> None:
+        """Rebuild the session combo whenever the selected course changes."""
         course_id = self._course_combo.itemData(index)
         course = next((c for c in self.teacher_config.courses if c.id == course_id), None)
         if course is None:
@@ -334,6 +340,7 @@ class RescheduleDialog(QDialog):
             self._on_session_changed(0)
 
     def _on_session_changed(self, index: int) -> None:
+        """Pre-fill new date and period from the selected original session."""
         if index < 0 or index >= len(self._sessions):
             return
         sc = self._sessions[index]
@@ -341,10 +348,12 @@ class RescheduleDialog(QDialog):
         self._period_combo.setCurrentIndex(sc.period - 1)
 
     def _on_period_changed(self, index: int) -> None:
+        """Show or hide the custom time field when 'カスタム' is selected."""
         is_custom = self._period_combo.itemData(index) is None
         self._form.setRowVisible(4, is_custom)
 
     def _on_accept(self) -> None:
+        """Validate inputs, build a reschedule Override object, and close the dialog."""
         session_idx = self._session_combo.currentIndex()
         if session_idx < 0 or session_idx >= len(self._sessions):
             QMessageBox.warning(self, "エラー", "授業回を選択してください。")
@@ -469,6 +478,7 @@ class ConfigDialog(QDialog):
         self._populate_adj_table()
 
     def _build_courses_tab(self) -> None:
+        """Build the 授業 tab: read-only courses table + load/add/edit/delete/conflict buttons."""
         layout = QVBoxLayout(self._tab_courses)
 
         self.courses_table = QTableWidget(0, 5)
@@ -507,6 +517,7 @@ class ConfigDialog(QDialog):
         layout.addLayout(btn_layout)
 
     def _build_preview_tab(self) -> None:
+        """Build the 日程プレビュー tab: course selector + schedule table (attendance codes editable)."""
         layout = QVBoxLayout(self._tab_preview)
 
         self.preview_combo = QComboBox()
@@ -531,6 +542,7 @@ class ConfigDialog(QDialog):
         layout.addLayout(btn_layout)
 
     def _build_adj_tab(self) -> None:
+        """Build the 調整 tab: reschedule/makeup overrides table + add/edit/delete buttons."""
         layout = QVBoxLayout(self._tab_adj)
 
         self.adj_table = QTableWidget(0, 4)
@@ -560,6 +572,7 @@ class ConfigDialog(QDialog):
         layout.addLayout(btn_layout)
 
     def _build_appearance_tab(self) -> None:
+        """Build the 外観 tab: attendance-code font/color, course-name font, and window-scale controls."""
         layout = QVBoxLayout(self._tab_appearance)
         form = QFormLayout()
         ap = self.teacher_config.appearance
@@ -647,6 +660,7 @@ class ConfigDialog(QDialog):
         layout.addStretch()
 
     def _build_about_tab(self) -> None:
+        """Build the About tab: university logo, app name/description, and version info table."""
         from PySide6.QtGui import QPixmap
 
         layout = QVBoxLayout(self._tab_about)
@@ -774,6 +788,7 @@ class ConfigDialog(QDialog):
     # ------------------------------------------------------------------
 
     def _populate_courses_table(self) -> None:
+        """Repopulate the courses table from self.teacher_config.courses and adjust column widths."""
         self.courses_table.setRowCount(0)
         for course in self.teacher_config.courses:
             row = self.courses_table.rowCount()
@@ -820,6 +835,7 @@ class ConfigDialog(QDialog):
         self.courses_table.setColumnWidth(4, max(col4_w, 60))
 
     def _populate_preview_combo(self) -> None:
+        """Repopulate the course selector combo in the preview tab."""
         self.preview_combo.blockSignals(True)
         self.preview_combo.clear()
         for course in self.teacher_config.courses:
@@ -828,6 +844,7 @@ class ConfigDialog(QDialog):
         self._refresh_preview()
 
     def _refresh_preview(self) -> None:
+        """Rebuild the preview table for the currently selected course, applying all overrides."""
         self.preview_table.blockSignals(True)
         self.preview_table.setRowCount(0)
         course_id = self.preview_combo.currentData()
@@ -872,6 +889,7 @@ class ConfigDialog(QDialog):
         self.preview_table.blockSignals(False)
 
     def _populate_adj_table(self) -> None:
+        """Repopulate the adjustments table from self.teacher_config.overrides."""
         self.adj_table.setRowCount(0)
         course_map = {c.id: c.name for c in self.teacher_config.courses}
         for ov in self.teacher_config.overrides:
@@ -893,6 +911,7 @@ class ConfigDialog(QDialog):
             self.adj_table.setItem(row, 3, QTableWidgetItem(period_str))
 
     def _on_generate_codes(self) -> None:
+        """Generate random 4-digit attendance codes for every session of the selected course."""
         course_id = self.preview_combo.currentData()
         if course_id is None:
             return
@@ -905,6 +924,7 @@ class ConfigDialog(QDialog):
         self._refresh_preview()
 
     def _on_code_changed(self, item: QTableWidgetItem) -> None:
+        """Persist an inline edit to the attendance code for the affected session."""
         if item.column() != 4:
             return
         session_item = self.preview_table.item(item.row(), 0)  # col 0 = session_key
@@ -925,6 +945,7 @@ class ConfigDialog(QDialog):
     # ------------------------------------------------------------------
 
     def _on_tab_changed(self, index: int) -> None:
+        """Refresh data-dependent tabs when the user switches to them."""
         if index == 1:  # 日程プレビュー
             self._refresh_preview()
         elif index == 2:  # 調整
@@ -962,6 +983,13 @@ class ConfigDialog(QDialog):
             self._populate_courses_table()
 
     def _on_check_conflicts(self) -> None:
+        """Detect time-window overlaps between different courses on the same day.
+
+        Uses actual period start/end times from school_config (or custom_start + session
+        duration for rescheduled sessions) to find intervals that overlap.  Skips sessions
+        belonging to the same course.  Deduplicates by (date, course_pair) so each conflict
+        is reported once.
+        """
         from collections import defaultdict
 
         def _to_min(t: str) -> int:
@@ -1091,6 +1119,7 @@ class ConfigDialog(QDialog):
         self._scale_label.setText(f"{self._window_scale}%")
 
     def _on_save(self) -> None:
+        """Read all appearance controls, persist to file, propagate to main.py, and confirm."""
         self.teacher_config.appearance.code_font_family = self._font_combo.currentFont().family()
         self.teacher_config.appearance.code_font_size = self._size_spin.value()
         self.teacher_config.appearance.course_font_family = self._course_font_combo.currentFont().family()

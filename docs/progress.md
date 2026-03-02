@@ -113,14 +113,26 @@ Phase 4 完成後に追加した機能（38 tests passing）:
 | AC7 | 预览授课日，停课/补课/调课 CRUD，保存后生效 | ✓ 调整 tab |
 - 38 tests passing
 
+## Phase 6 完成：打包前整理（2026-03-02）
+
+### 代码整理内容
+- **docstrings 追加** (config_dialog.py): `_build_*` 全 5 件、`CourseEditDialog._build_ui/_on_accept`、`RescheduleDialog._build_ui/_prefill/_on_*`、`_populate_*`、`_refresh_preview`、`_on_check_conflicts`、`_on_save` 等 20+ メソッド
+- **docstrings 追加** (school_config.py): `get_semester`、`load_school_config`
+- **docstrings 追加** (teacher_config.py): `load_teacher_config`、`save_teacher_config`、`_strip_none`
+- **死代码削除** (teacher_config.py): `Settings.standby_on_no_class` — load/save にはあるが `_tick()` で一切参照されていなかった
+- **死枝削除** (main.py): `on_position_changed` の `window_position is None` 分岐 — `WindowPosition` は常に `default_factory` で生成されるため到達不能
+
+### 変更後テスト
+- 38 tests passing ✓
+
 ## 5-Question Reboot Check
 | Question | Answer |
 |----------|--------|
-| Where am I? | Phase 6: 测试与验收（in_progress） |
-| Where am I going? | Phase 6 完成 → 项目结束 |
+| Where am I? | Phase 7: 打包与发布 |
+| Where am I going? | PyInstaller でパッケージング → 配布 |
 | What's the goal? | 开发出勤码展示工具：置顶小窗、按课表自动提示、支持调整、打包为独立 exe |
 | What have I learned? | 見 findings.md；完整実装済み、38 tests passing |
-| What have I done? | Phase 1-5 完成 + 7 AC 全部验证通过 |
+| What have I done? | Phase 1-6 完成 + 7 AC 全部验证通过 + 打包前代码整理 |
 
 ---
 *Update after completing each phase or encountering errors*

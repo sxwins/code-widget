@@ -51,9 +51,8 @@ class WindowPosition:
 
 @dataclass
 class Settings:
-    pre_class_minutes: int = 10
-    post_class_minutes: int = 30
-    standby_on_no_class: bool = True
+    pre_class_minutes: int = 10   # minutes before class start to show overlay
+    post_class_minutes: int = 30  # minutes after class start to keep overlay visible
 
 
 @dataclass
@@ -81,6 +80,7 @@ class TeacherConfig:
 
 
 def load_teacher_config(path: str | Path) -> TeacherConfig:
+    """Load and parse a teacher config JSON file into a TeacherConfig object."""
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
 
@@ -123,7 +123,6 @@ def load_teacher_config(path: str | Path) -> TeacherConfig:
         settings=Settings(
             pre_class_minutes=settings_data.get("pre_class_minutes", 10),
             post_class_minutes=settings_data.get("post_class_minutes", 30),
-            standby_on_no_class=settings_data.get("standby_on_no_class", True),
         ),
         attendance_codes=data.get("attendance_codes", {}),
         appearance=Appearance(**{
@@ -134,7 +133,9 @@ def load_teacher_config(path: str | Path) -> TeacherConfig:
 
 
 def save_teacher_config(config: TeacherConfig, path: str | Path) -> None:
+    """Serialise *config* to JSON and write to *path*."""
     def _strip_none(d: dict) -> dict:
+        """Remove None and empty-string values from an override dict before serialisation."""
         return {k: v for k, v in d.items() if v is not None and v != ""}
 
     data = {
@@ -179,7 +180,6 @@ def save_teacher_config(config: TeacherConfig, path: str | Path) -> None:
         "settings": {
             "pre_class_minutes": config.settings.pre_class_minutes,
             "post_class_minutes": config.settings.post_class_minutes,
-            "standby_on_no_class": config.settings.standby_on_no_class,
         },
     }
     with open(path, "w", encoding="utf-8") as f:

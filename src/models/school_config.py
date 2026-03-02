@@ -43,6 +43,7 @@ class SchoolConfig:
     semesters: list[SemesterDates]
 
     def get_semester(self, semester_id: str) -> SemesterDates | None:
+        """Return the SemesterDates matching *semester_id*, or None if not found."""
         for s in self.semesters:
             if s.semester_id == semester_id:
                 return s
@@ -50,6 +51,7 @@ class SchoolConfig:
 
 
 def load_school_config(path: str | Path) -> SchoolConfig:
+    """Load and parse school_config.json into a SchoolConfig object."""
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
 

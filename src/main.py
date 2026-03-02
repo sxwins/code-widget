@@ -107,11 +107,8 @@ def main():
 
     # Save position when dragged
     def on_position_changed(x: int, y: int):
-        if teacher_config.window_position is None:
-            teacher_config.window_position = WindowPosition(x=x, y=y)
-        else:
-            teacher_config.window_position.x = x
-            teacher_config.window_position.y = y
+        teacher_config.window_position.x = x
+        teacher_config.window_position.y = y
         save_teacher_config(teacher_config, teacher_path)
 
     win.position_changed.connect(on_position_changed)

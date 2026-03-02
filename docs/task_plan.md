@@ -4,7 +4,7 @@
 开发一个轻量级桌面工具，帮助教师在上课前后自动弹出置顶小窗展示出勤码，支持按学期课表智能提示、手动输入码、以及停课/补课/调课调整，打包为 Windows/macOS 独立可执行文件。
 
 ## Current Phase
-Phase 6: 测试与验收
+Phase 7: 打包与发布（最终）
 
 ## Phases
 
@@ -51,8 +51,8 @@ Phase 6: 测试与验收
 ### Phase 6: 测试与验收
 - [x] 验证全部 7 条验收标准（requirements.md §12）
 - [x] 边界测试（跨日期、窗口边界、多课冲突）— 38 tests passing
-- [ ] 文档整理
-- **Status:** in_progress
+- [x] 打包前代码整理：添加注释 / 删除死代码 / 更新文档
+- **Status:** complete
 
 ## Key Questions
 1. GUI 框架：PyQt6 还是 PySide6？（授权差异：PyQt6 GPL / PySide6 LGPL）

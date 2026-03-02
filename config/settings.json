@@ -1,9 +1,9 @@
 {
   "active_config": "",
   "appearance": {
-    "code_font_family": "Courier New",
+    "code_font_family": "Arial",
     "code_font_size": 72,
-    "code_color": "#000000",
+    "code_color": "#00ff7f",
     "code_bg_color": "#ffffff",
     "border_color": "#90CAF9",
     "course_font_family": "",

@@ -57,9 +57,9 @@ class Settings:
 
 @dataclass
 class Appearance:
-    code_font_family: str = "Courier New"
+    code_font_family: str = "Arial"
     code_font_size: int = 72
-    code_color: str = "#000000"
+    code_color: str = "#00ff7f"
     code_bg_color: str = "#ffffff"
     border_color: str = "#90CAF9"
     course_font_family: str = ""

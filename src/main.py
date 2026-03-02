@@ -6,7 +6,7 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, QTimer
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
 from engine.override import apply_overrides
@@ -87,10 +87,9 @@ def main():
     app.setOrganizationName("CodeWidget")
     app.setWindowIcon(make_icon())
 
-    # Load configs
-    settings = QSettings()
+    # Load configs — always start from the default teacher_config.json
     _ensure_school_config(SCHOOL_CONFIG_PATH)
-    teacher_path = Path(settings.value("teacher_config_path", str(DEFAULT_TEACHER_CONFIG)))
+    teacher_path = DEFAULT_TEACHER_CONFIG
     _ensure_user_config(teacher_path)
     try:
         school_config = load_school_config(SCHOOL_CONFIG_PATH)
@@ -160,7 +159,6 @@ def main():
         """
         nonlocal teacher_path, all_scheduled
         teacher_path = Path(new_path)
-        settings.setValue("teacher_config_path", new_path)
         all_scheduled = _build_all_scheduled(teacher_config, school_config)
         win.apply_appearance(teacher_config.appearance)
         _last_active[0] = None

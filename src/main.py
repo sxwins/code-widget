@@ -127,6 +127,7 @@ def main():
                 save_path=teacher_path,
             )
             dlg.config_saved.connect(on_config_saved)
+            dlg.config_file_loaded.connect(on_config_file_loaded)
             config_dialog_holder[0] = dlg
         config_dialog_holder[0].show()
         config_dialog_holder[0].raise_()
@@ -136,6 +137,20 @@ def main():
         all_scheduled = _build_all_scheduled(teacher_config, school_config)
         win.apply_appearance(teacher_config.appearance)
         _last_active[0] = None  # force _tick() to re-evaluate and push new code to window
+        _tick()
+
+    def on_config_file_loaded(new_path: str) -> None:
+        """Handle a new teacher config file loaded from the Settings dialog.
+
+        Updates QSettings so the path persists across restarts, then
+        rebuilds the schedule and refreshes the UI exactly like on_config_saved.
+        """
+        nonlocal teacher_path, all_scheduled
+        teacher_path = Path(new_path)
+        settings.setValue("teacher_config_path", new_path)
+        all_scheduled = _build_all_scheduled(teacher_config, school_config)
+        win.apply_appearance(teacher_config.appearance)
+        _last_active[0] = None
         _tick()
 
     tray.open_config.connect(open_config)

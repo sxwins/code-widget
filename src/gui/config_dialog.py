@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
+    QFileDialog,
     QVBoxLayout,
     QWidget,
 )
@@ -41,6 +42,7 @@ from models.teacher_config import (
     Override,
     Slot,
     TeacherConfig,
+    load_teacher_config,
     save_teacher_config,
 )
 
@@ -389,9 +391,10 @@ class RescheduleDialog(QDialog):
 
 
 class ConfigDialog(QDialog):
-    """Three-tab configuration dialog."""
+    """Five-tab configuration dialog (courses / preview / adjustments / appearance / about)."""
 
     config_saved = Signal()
+    config_file_loaded = Signal(str)  # emitted with the new file path after loading
 
     def __init__(
         self,
@@ -485,14 +488,17 @@ class ConfigDialog(QDialog):
         layout.addWidget(self.courses_table)
 
         btn_layout = QHBoxLayout()
+        btn_load = QPushButton("設定を読み込む")
         btn_add = QPushButton("追加")
         btn_edit = QPushButton("編集")
         btn_del = QPushButton("削除")
         btn_conflict = QPushButton("衝突検出")
+        btn_load.clicked.connect(self._on_load_config)
         btn_add.clicked.connect(self._on_add_course)
         btn_edit.clicked.connect(self._on_edit_course)
         btn_del.clicked.connect(self._on_delete_course)
         btn_conflict.clicked.connect(self._on_check_conflicts)
+        btn_layout.addWidget(btn_load)
         btn_layout.addWidget(btn_add)
         btn_layout.addWidget(btn_edit)
         btn_layout.addWidget(btn_del)
@@ -618,38 +624,62 @@ class ConfigDialog(QDialog):
         layout.addStretch()
 
     def _build_about_tab(self) -> None:
+        from PySide6.QtGui import QPixmap
+
         layout = QVBoxLayout(self._tab_about)
-        layout.setContentsMargins(24, 32, 24, 24)
-        layout.setSpacing(6)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(4)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
 
-        # App icon
-        icon_label = QLabel()
-        icon_label.setPixmap(make_icon(64).pixmap(64, 64))
-        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(icon_label)
+        # University logo (loaded from debug_info/ in dev; falls back gracefully if missing)
+        logo_path = Path(__file__).parent.parent.parent / "debug_info" / "reitaku_logo.png"
+        if logo_path.exists():
+            logo_pix = QPixmap(str(logo_path))
+            if not logo_pix.isNull():
+                logo_label = QLabel()
+                # Scale down if too wide for the dialog, preserve aspect ratio
+                logo_label.setPixmap(
+                    logo_pix.scaledToHeight(50, Qt.TransformationMode.SmoothTransformation)
+                )
+                logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                layout.addWidget(logo_label)
+                layout.addSpacing(10)
 
-        layout.addSpacing(8)
-
-        # App name
+        # App icon + name in a horizontal row
+        icon_row = QHBoxLayout()
+        icon_row.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        icon_lbl = QLabel()
+        icon_lbl.setPixmap(make_icon(48).pixmap(48, 48))
         name_label = QLabel("CodeWidget")
         font_name = QFont()
         font_name.setPointSize(18)
         font_name.setBold(True)
         name_label.setFont(font_name)
-        name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(name_label)
+        icon_row.addWidget(icon_lbl)
+        icon_row.addSpacing(10)
+        icon_row.addWidget(name_label)
+        layout.addLayout(icon_row)
 
-        # Description
-        desc_label = QLabel("出勤码展示工具")
+        layout.addSpacing(4)
+
+        # Japanese description
+        desc_label = QLabel("出席認証コード表示ツール")
         font_desc = QFont()
         font_desc.setPointSize(10)
         desc_label.setFont(font_desc)
-        desc_label.setStyleSheet("color: #555;")
+        desc_label.setStyleSheet("color: #444;")
         desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(desc_label)
 
-        layout.addSpacing(20)
+        univ_label = QLabel("麗澤大学")
+        font_univ = QFont()
+        font_univ.setPointSize(9)
+        univ_label.setFont(font_univ)
+        univ_label.setStyleSheet("color: #777;")
+        univ_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(univ_label)
+
+        layout.addSpacing(16)
 
         # Info table
         info_label = QLabel(
@@ -665,6 +695,54 @@ class ConfigDialog(QDialog):
         layout.addWidget(info_label)
 
         layout.addStretch()
+
+    # ------------------------------------------------------------------
+    # Load config
+    # ------------------------------------------------------------------
+
+    def _on_load_config(self) -> None:
+        """Open a file dialog to load a different teacher config JSON.
+
+        Updates all tabs in-place and emits config_file_loaded(path) so
+        main.py can update QSettings and rebuild the schedule.
+        """
+        default_dir = str(Path(self.save_path).parent) if self.save_path else "."
+        path, _ = QFileDialog.getOpenFileName(
+            self, "設定ファイルを選択", default_dir, "JSON (*.json)"
+        )
+        if not path:
+            return
+        try:
+            new_config = load_teacher_config(path)
+        except Exception as exc:
+            QMessageBox.critical(self, "読み込みエラー", f"設定の読み込みに失敗しました。\n\n{exc}")
+            return
+
+        self.teacher_config = new_config
+        self.save_path = path
+        # Mutate the original object in-place so main.py's reference is up to date
+        self._orig_teacher.__dict__.update(new_config.__dict__)
+
+        # Refresh all data tabs and appearance controls
+        self._populate_courses_table()
+        self._populate_preview_combo()
+        self._populate_adj_table()
+        self._populate_appearance_tab()
+
+        # Notify main.py of the new path (for QSettings + schedule rebuild)
+        self.config_file_loaded.emit(path)
+
+    def _populate_appearance_tab(self) -> None:
+        """Sync the appearance-tab controls with self.teacher_config.appearance."""
+        ap = self.teacher_config.appearance
+        self._font_combo.setCurrentFont(QFont(ap.code_font_family))
+        self._size_spin.setValue(ap.code_font_size)
+        self._color_btn.setStyleSheet(f"background-color: {ap.code_color}; border: 1px solid #888;")
+        self._bg_btn.setStyleSheet(f"background-color: {ap.code_bg_color}; border: 1px solid #888;")
+        self._border_btn.setStyleSheet(f"background-color: {ap.border_color}; border: 1px solid #888;")
+        course_family = ap.course_font_family or QFont().family()
+        self._course_font_combo.setCurrentFont(QFont(course_family))
+        self._course_size_spin.setValue(ap.course_font_size)
 
     # ------------------------------------------------------------------
     # Population helpers

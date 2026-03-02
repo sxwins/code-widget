@@ -21,6 +21,7 @@ a = Analysis(
         # Bundle the default config templates (seeded to config/ on first run)
         (str(ROOT / "config" / "school_config.json"), "config"),
         (str(ROOT / "config" / "teacher_config.json"), "config"),
+        (str(ROOT / "config" / "settings.json"), "config"),
     ],
     hiddenimports=[],
     hookspath=[],

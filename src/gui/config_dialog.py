@@ -35,6 +35,7 @@ from PySide6.QtWidgets import (
 from engine.override import apply_overrides
 from engine.scheduler import ScheduledClass, resolve_course_schedule
 from gui.icon import make_icon
+from models.app_settings import AppSettings, save_app_settings
 from models.school_config import SchoolConfig
 from models.teacher_config import (
     Appearance,
@@ -410,6 +411,8 @@ class ConfigDialog(QDialog):
         school_config: SchoolConfig,
         teacher_config: TeacherConfig,
         save_path: Path | str | None = None,
+        app_settings: AppSettings | None = None,
+        app_settings_path: Path | str | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -417,6 +420,9 @@ class ConfigDialog(QDialog):
         self._orig_teacher = teacher_config
         self.teacher_config = copy.deepcopy(teacher_config)
         self.save_path = save_path
+        self._orig_app_settings = app_settings if app_settings is not None else AppSettings()
+        self.app_settings = copy.deepcopy(self._orig_app_settings)
+        self.app_settings_path = app_settings_path
 
         self.setWindowTitle("CodeWidget 設定")
         self._build_ui()
@@ -575,7 +581,7 @@ class ConfigDialog(QDialog):
         """Build the 外観 tab: attendance-code font/color, course-name font, and window-scale controls."""
         layout = QVBoxLayout(self._tab_appearance)
         form = QFormLayout()
-        ap = self.teacher_config.appearance
+        ap = self.app_settings.appearance
 
         # --- 出席コード section ---
         _lbl_code = QLabel("<b>出席コード</b>")
@@ -741,7 +747,7 @@ class ConfigDialog(QDialog):
         """Open a file dialog to load a different teacher config JSON.
 
         Updates all tabs in-place and emits config_file_loaded(path) so
-        main.py can update QSettings and rebuild the schedule.
+        main.py can update settings.json and rebuild the schedule.
         """
         default_dir = str(Path(self.save_path).parent) if self.save_path else "."
         path, _ = QFileDialog.getOpenFileName(
@@ -760,18 +766,21 @@ class ConfigDialog(QDialog):
         # Mutate the original object in-place so main.py's reference is up to date
         self._orig_teacher.__dict__.update(new_config.__dict__)
 
-        # Refresh all data tabs and appearance controls
+        # Update active_config in app_settings so settings.json is kept in sync
+        self.app_settings.active_config = path
+        self._orig_app_settings.active_config = path
+
+        # Refresh course/adjustment tabs only; appearance stays unchanged
         self._populate_courses_table()
         self._populate_preview_combo()
         self._populate_adj_table()
-        self._populate_appearance_tab()
 
-        # Notify main.py of the new path (for QSettings + schedule rebuild)
+        # Notify main.py of the new path (for settings.json + schedule rebuild)
         self.config_file_loaded.emit(path)
 
     def _populate_appearance_tab(self) -> None:
-        """Sync the appearance-tab controls with self.teacher_config.appearance."""
-        ap = self.teacher_config.appearance
+        """Sync the appearance-tab controls with self.app_settings.appearance."""
+        ap = self.app_settings.appearance
         self._font_combo.setCurrentFont(QFont(ap.code_font_family))
         self._size_spin.setValue(ap.code_font_size)
         self._color_btn.setStyleSheet(f"background-color: {ap.code_color}; border: 1px solid #888;")
@@ -1093,21 +1102,21 @@ class ConfigDialog(QDialog):
             self._refresh_preview()
 
     def _pick_code_color(self) -> None:
-        color = QColorDialog.getColor(QColor(self.teacher_config.appearance.code_color), self)
+        color = QColorDialog.getColor(QColor(self.app_settings.appearance.code_color), self)
         if color.isValid():
-            self.teacher_config.appearance.code_color = color.name()
+            self.app_settings.appearance.code_color = color.name()
             self._color_btn.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #888;")
 
     def _pick_bg_color(self) -> None:
-        color = QColorDialog.getColor(QColor(self.teacher_config.appearance.code_bg_color), self)
+        color = QColorDialog.getColor(QColor(self.app_settings.appearance.code_bg_color), self)
         if color.isValid():
-            self.teacher_config.appearance.code_bg_color = color.name()
+            self.app_settings.appearance.code_bg_color = color.name()
             self._bg_btn.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #888;")
 
     def _pick_border_color(self) -> None:
-        color = QColorDialog.getColor(QColor(self.teacher_config.appearance.border_color), self)
+        color = QColorDialog.getColor(QColor(self.app_settings.appearance.border_color), self)
         if color.isValid():
-            self.teacher_config.appearance.border_color = color.name()
+            self.app_settings.appearance.border_color = color.name()
             self._border_btn.setStyleSheet(f"background-color: {color.name()}; border: 1px solid #888;")
 
     def _on_scale_minus(self) -> None:
@@ -1119,15 +1128,22 @@ class ConfigDialog(QDialog):
         self._scale_label.setText(f"{self._window_scale}%")
 
     def _on_save(self) -> None:
-        """Read all appearance controls, persist to file, propagate to main.py, and confirm."""
-        self.teacher_config.appearance.code_font_family = self._font_combo.currentFont().family()
-        self.teacher_config.appearance.code_font_size = self._size_spin.value()
-        self.teacher_config.appearance.course_font_family = self._course_font_combo.currentFont().family()
-        self.teacher_config.appearance.course_font_size = self._course_size_spin.value()
-        self.teacher_config.appearance.window_scale = self._window_scale
+        """Read all controls, persist teacher config and app settings, then confirm."""
+        # --- teacher config (courses, codes, window position) ---
         if self.save_path is not None:
             save_teacher_config(self.teacher_config, self.save_path)
         self._orig_teacher.__dict__.update(self.teacher_config.__dict__)
+
+        # --- app settings (appearance) ---
+        self.app_settings.appearance.code_font_family = self._font_combo.currentFont().family()
+        self.app_settings.appearance.code_font_size = self._size_spin.value()
+        self.app_settings.appearance.course_font_family = self._course_font_combo.currentFont().family()
+        self.app_settings.appearance.course_font_size = self._course_size_spin.value()
+        self.app_settings.appearance.window_scale = self._window_scale
+        if self.app_settings_path is not None:
+            save_app_settings(self.app_settings, self.app_settings_path)
+        self._orig_app_settings.__dict__.update(self.app_settings.__dict__)
+
         self.config_saved.emit()
         self._btn_save.setText("✓ 保存完了")
         self._btn_save.setEnabled(False)

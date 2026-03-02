@@ -18,23 +18,29 @@ def teacher():
     return load_teacher_config(TEACHER)
 
 
-def test_dialog_opens(qtbot, school, teacher):
+@pytest.fixture
+def app_settings():
+    from models.app_settings import AppSettings
+    return AppSettings()
+
+
+def test_dialog_opens(qtbot, school, teacher, app_settings):
     from gui.config_dialog import ConfigDialog
-    dlg = ConfigDialog(school_config=school, teacher_config=teacher)
+    dlg = ConfigDialog(school_config=school, teacher_config=teacher, app_settings=app_settings)
     qtbot.addWidget(dlg)
     assert dlg is not None
 
 
-def test_courses_tab_row_count(qtbot, school, teacher):
+def test_courses_tab_row_count(qtbot, school, teacher, app_settings):
     from gui.config_dialog import ConfigDialog
-    dlg = ConfigDialog(school_config=school, teacher_config=teacher)
+    dlg = ConfigDialog(school_config=school, teacher_config=teacher, app_settings=app_settings)
     qtbot.addWidget(dlg)
     assert dlg.courses_table.columnCount() == 5
 
 
-def test_year_column(qtbot, school, teacher):
+def test_year_column(qtbot, school, teacher, app_settings):
     from gui.config_dialog import ConfigDialog
-    dlg = ConfigDialog(school_config=school, teacher_config=teacher)
+    dlg = ConfigDialog(school_config=school, teacher_config=teacher, app_settings=app_settings)
     qtbot.addWidget(dlg)
     # Year column (index 2) should contain "2026" for all non-intensive courses
     for row in range(dlg.courses_table.rowCount()):
@@ -43,17 +49,17 @@ def test_year_column(qtbot, school, teacher):
         assert year_item.text() == "2026"
 
 
-def test_tab_count(qtbot, school, teacher):
+def test_tab_count(qtbot, school, teacher, app_settings):
     from gui.config_dialog import ConfigDialog
-    dlg = ConfigDialog(school_config=school, teacher_config=teacher)
+    dlg = ConfigDialog(school_config=school, teacher_config=teacher, app_settings=app_settings)
     qtbot.addWidget(dlg)
     assert dlg.tabs.count() == 5  # 授業 / 日程プレビュー / 調整 / 外観 / About
 
 
-def test_adj_tab_buttons(qtbot, school, teacher):
+def test_adj_tab_buttons(qtbot, school, teacher, app_settings):
     from gui.config_dialog import ConfigDialog
     from PySide6.QtWidgets import QPushButton
-    dlg = ConfigDialog(school_config=school, teacher_config=teacher)
+    dlg = ConfigDialog(school_config=school, teacher_config=teacher, app_settings=app_settings)
     qtbot.addWidget(dlg)
     # Adj tab should have exactly 3 buttons matching courses-tab pattern
     buttons = dlg._tab_adj.findChildren(QPushButton)

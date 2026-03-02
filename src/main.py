@@ -16,6 +16,7 @@ from gui.config_dialog import ConfigDialog
 from gui.icon import make_icon
 from gui.tray import TrayIcon
 from models.school_config import SchoolConfig, load_school_config
+from models.app_settings import AppSettings, load_app_settings, save_app_settings
 from models.teacher_config import (
     TeacherConfig,
     Settings,
@@ -40,6 +41,7 @@ def _user_data_dir() -> Path:
 
 
 SCHOOL_CONFIG_PATH = _user_data_dir() / "config" / "school_config.json"
+APP_SETTINGS_PATH  = _user_data_dir() / "config" / "settings.json"
 DEFAULT_TEACHER_CONFIG = _user_data_dir() / "config" / "teacher_config.json"
 TICK_MS = 30_000  # 30 seconds
 
@@ -57,6 +59,19 @@ def _ensure_school_config(school_path: Path) -> None:
     if template.exists():
         import shutil
         shutil.copy(template, school_path)
+
+
+def _ensure_app_settings(path: Path) -> None:
+    """On first run, copy bundled settings.json template next to the EXE."""
+    if path.exists():
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    template = _resource("config/settings.json")
+    if template.exists():
+        import shutil
+        shutil.copy(template, path)
+    else:
+        save_app_settings(AppSettings(), path)
 
 
 def _ensure_user_config(teacher_path: Path) -> None:
@@ -87,9 +102,11 @@ def main():
     app.setOrganizationName("CodeWidget")
     app.setWindowIcon(make_icon())
 
-    # Load configs — always start from the default teacher_config.json
+    # Load configs
     _ensure_school_config(SCHOOL_CONFIG_PATH)
-    teacher_path = DEFAULT_TEACHER_CONFIG
+    _ensure_app_settings(APP_SETTINGS_PATH)
+    app_settings = load_app_settings(APP_SETTINGS_PATH)
+    teacher_path = Path(app_settings.active_config) if app_settings.active_config else DEFAULT_TEACHER_CONFIG
     _ensure_user_config(teacher_path)
     try:
         school_config = load_school_config(SCHOOL_CONFIG_PATH)
@@ -117,7 +134,7 @@ def main():
         win.move(teacher_config.window_position.x, teacher_config.window_position.y)
 
     # Apply saved appearance and show window on startup
-    win.apply_appearance(teacher_config.appearance)
+    win.apply_appearance(app_settings.appearance)
     win.show()
 
     # Save position when dragged
@@ -137,6 +154,8 @@ def main():
                 school_config=school_config,
                 teacher_config=teacher_config,
                 save_path=teacher_path,
+                app_settings=app_settings,
+                app_settings_path=APP_SETTINGS_PATH,
             )
             dlg.config_saved.connect(on_config_saved)
             dlg.config_file_loaded.connect(on_config_file_loaded)
@@ -147,20 +166,22 @@ def main():
     def on_config_saved():
         nonlocal all_scheduled
         all_scheduled = _build_all_scheduled(teacher_config, school_config)
-        win.apply_appearance(teacher_config.appearance)
+        win.apply_appearance(app_settings.appearance)
         _last_active[0] = None  # force _tick() to re-evaluate and push new code to window
         _tick()
 
     def on_config_file_loaded(new_path: str) -> None:
         """Handle a new teacher config file loaded from the Settings dialog.
 
-        Updates QSettings so the path persists across restarts, then
+        Updates settings.json so the path persists across restarts, then
         rebuilds the schedule and refreshes the UI exactly like on_config_saved.
         """
         nonlocal teacher_path, all_scheduled
         teacher_path = Path(new_path)
+        app_settings.active_config = new_path
+        save_app_settings(app_settings, APP_SETTINGS_PATH)
         all_scheduled = _build_all_scheduled(teacher_config, school_config)
-        win.apply_appearance(teacher_config.appearance)
+        win.apply_appearance(app_settings.appearance)
         _last_active[0] = None
         _tick()
 

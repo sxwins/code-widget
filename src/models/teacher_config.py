@@ -76,7 +76,6 @@ class TeacherConfig:
     settings: Settings = field(default_factory=Settings)
     academic_year: str = ""
     attendance_codes: dict[str, str] = field(default_factory=dict)  # key: "{course_id}_{session_key}"
-    appearance: Appearance = field(default_factory=Appearance)
 
 
 def load_teacher_config(path: str | Path) -> TeacherConfig:
@@ -125,10 +124,6 @@ def load_teacher_config(path: str | Path) -> TeacherConfig:
             post_class_minutes=settings_data.get("post_class_minutes", 30),
         ),
         attendance_codes=data.get("attendance_codes", {}),
-        appearance=Appearance(**{
-            k: v for k, v in data.get("appearance", {}).items()
-            if k in Appearance.__dataclass_fields__
-        }),
     )
 
 
@@ -166,16 +161,6 @@ def save_teacher_config(config: TeacherConfig, path: str | Path) -> None:
             for o in config.overrides
         ],
         "attendance_codes": config.attendance_codes,
-        "appearance": {
-            "code_font_family": config.appearance.code_font_family,
-            "code_font_size": config.appearance.code_font_size,
-            "code_color": config.appearance.code_color,
-            "code_bg_color": config.appearance.code_bg_color,
-            "border_color": config.appearance.border_color,
-            "course_font_family": config.appearance.course_font_family,
-            "course_font_size": config.appearance.course_font_size,
-            "window_scale": config.appearance.window_scale,
-        },
         "window_position": {"x": config.window_position.x, "y": config.window_position.y},
         "settings": {
             "pre_class_minutes": config.settings.pre_class_minutes,

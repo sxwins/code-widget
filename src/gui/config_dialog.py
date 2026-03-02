@@ -790,14 +790,17 @@ class ConfigDialog(QDialog):
             self.preview_table.blockSignals(False)
             return
 
+        def _cell(text: str) -> QTableWidgetItem:
+            item = QTableWidgetItem(text)
+            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            return item
+
         for sc in scheduled_sorted:
             row = self.preview_table.rowCount()
             self.preview_table.insertRow(row)
-            self.preview_table.setItem(row, 0, QTableWidgetItem(sc.session_key))
-            date_str = str(sc.date)
-            self.preview_table.setItem(row, 1, QTableWidgetItem(date_str))
-            jp_wd = WEEKDAY_JP.get(sc.weekday, sc.weekday)
-            self.preview_table.setItem(row, 2, QTableWidgetItem(jp_wd))
+            self.preview_table.setItem(row, 0, _cell(sc.session_key))
+            self.preview_table.setItem(row, 1, _cell(str(sc.date)))
+            self.preview_table.setItem(row, 2, _cell(WEEKDAY_JP.get(sc.weekday, sc.weekday)))
             if sc.custom_start:
                 h, m = map(int, sc.custom_start.split(":"))
                 total_end = h * 60 + m + 100
@@ -805,9 +808,9 @@ class ConfigDialog(QDialog):
                 period_str = f"{sc.custom_start}-{end_str}"
             else:
                 period_str = f"{sc.period}限"
-            self.preview_table.setItem(row, 3, QTableWidgetItem(period_str))
+            self.preview_table.setItem(row, 3, _cell(period_str))
             code = self.teacher_config.attendance_codes.get(f"{course_id}_{sc.session_key}", "")
-            self.preview_table.setItem(row, 4, QTableWidgetItem(code))
+            self.preview_table.setItem(row, 4, _cell(code))
 
         self.preview_table.blockSignals(False)
 

@@ -762,6 +762,15 @@ class ConfigDialog(QDialog):
             slots_str = ", ".join(_slot_label(s) for s in course.slots)
             self.courses_table.setItem(row, 4, QTableWidgetItem(slots_str))
 
+        # Widen 年度 (col 2) and 種別 (col 3) by ~20%, deducting from the Stretch スロット column.
+        # Reset to ResizeToContents first to measure the natural content width, then fix at ×1.2.
+        hh = self.courses_table.horizontalHeader()
+        for col in (2, 3):
+            hh.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+            natural = self.courses_table.columnWidth(col)
+            hh.setSectionResizeMode(col, QHeaderView.ResizeMode.Fixed)
+            self.courses_table.setColumnWidth(col, int(natural * 1.2))
+
     def _populate_preview_combo(self) -> None:
         self.preview_combo.blockSignals(True)
         self.preview_combo.clear()

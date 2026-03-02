@@ -762,14 +762,37 @@ class ConfigDialog(QDialog):
             slots_str = ", ".join(_slot_label(s) for s in course.slots)
             self.courses_table.setItem(row, 4, QTableWidgetItem(slots_str))
 
-        # Widen 年度 (col 2) and 種別 (col 3) by ~20%, deducting from the Stretch スロット column.
-        # Reset to ResizeToContents first to measure the natural content width, then fix at ×1.2.
+        # Widen 年度 (col 2) and 種別 (col 3) by ~20%.
+        # Reset to ResizeToContents first to measure natural content width, then fix at ×1.2.
         hh = self.courses_table.horizontalHeader()
         for col in (2, 3):
             hh.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
             natural = self.courses_table.columnWidth(col)
             hh.setSectionResizeMode(col, QHeaderView.ResizeMode.Fixed)
             self.courses_table.setColumnWidth(col, int(natural * 1.2))
+
+        # Redistribute the Stretch columns (授業名 col 1, スロット col 4) at 65% / 35%.
+        # Deferred so Qt has completed the layout pass and viewport().width() is valid.
+        QTimer.singleShot(0, self._adjust_name_slot_widths)
+
+    def _adjust_name_slot_widths(self) -> None:
+        """Set 授業名 (col 1) to 65% and スロット (col 4) to 35% of their combined space.
+
+        Called via QTimer.singleShot(0) so the viewport has been realised.
+        スロット gets 30% less than equal-split (50%→35%); 授業名 gains the difference.
+        """
+        hh = self.courses_table.horizontalHeader()
+        fixed_total = sum(self.courses_table.columnWidth(c) for c in (0, 2, 3))
+        viewport_w = self.courses_table.viewport().width()
+        remaining = viewport_w - fixed_total
+        if remaining <= 0:
+            return
+        col4_w = int(remaining * 0.35)
+        col1_w = remaining - col4_w
+        hh.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        hh.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
+        self.courses_table.setColumnWidth(1, max(col1_w, 80))
+        self.courses_table.setColumnWidth(4, max(col4_w, 60))
 
     def _populate_preview_combo(self) -> None:
         self.preview_combo.blockSignals(True)

@@ -4,6 +4,30 @@
 
 ---
 
+## [1.0.7] — 2026-03-03 JST · commit `(pending)`
+
+### 修正：03_调度逻辑规格.md + TECHNICAL_DEBT.md（外部审查 2B 修正）
+
+针对外部审查员 2B（`period=0` 记录的排序局限）评估结果：**接受**，并作如下文档修正。
+
+#### 问题确认
+
+`override.py` 中所有三处 `sort(key=lambda sc: (sc.date, sc.period))` 均不含 `custom_start` 字段。当同一日期存在多个 `period=0` 的记录（同天多次使用 `new_start_time` 调课）时，排序键完全相同，实际顺序为 Python 稳定排序保留前一步的相对顺序，不保证按 `custom_start` 时间排列。
+
+#### 修正：03_调度逻辑规格.md §4.5（已于 [1.0.6] 提交中更新）
+
+- 在 Override 后处理步骤 1（`result.sort`）说明中加注已知局限。
+
+#### 修正：03_调度逻辑规格.md §5.3（本次新增）
+
+- 在 `_reassign_session_keys` 组内排序说明后加注相同局限（引用 TECHNICAL_DEBT.md TD-02）。
+
+#### 新增：TECHNICAL_DEBT.md TD-02
+
+- 记录三处排序调用均未含 `custom_start` 的代码级问题，提供建议修正方案（排序键改为三元组 `(date, period, custom_start)`）。
+
+---
+
 ## [1.0.6] — 2026-03-03 JST · commit `13ddaf1`
 
 ### 修正：03_调度逻辑规格.md（自审后修正）

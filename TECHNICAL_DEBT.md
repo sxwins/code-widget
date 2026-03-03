@@ -59,3 +59,46 @@ by AppSettings and persisted in settings.json.
 **发现时机**：2026-03-03，文档审查 `docs/cn/02_架构设计.md` 过程中
 
 ---
+
+## [TD-02] `period=0` 记录的排序键不含 `custom_start`，同天多条时顺序不确定
+
+**文件**：`src/engine/override.py`
+
+**背景**：
+
+`override.py` 中共有三处排序调用，均以 `(sc.date, sc.period)` 作为排序键：
+
+```python
+# override.py:34  — apply_overrides 主排序
+result.sort(key=lambda sc: (sc.date, sc.period))
+
+# override.py:114 — _reassign_session_keys 组内排序
+group.sort(key=lambda sc: (sc.date, sc.period))
+
+# override.py:118 — _reassign_session_keys 最终全局排序
+scheduled.sort(key=lambda sc: (sc.date, sc.period))
+```
+
+当 reschedule override 提供 `new_start_time` 时，`new_period` 被设为 0（见 `_apply_reschedule`）。若同一天存在多个此类记录，其排序键 `(date, 0)` 完全相同，实际顺序由 Python 稳定排序保持前一步的相对顺序，**而非按 `custom_start` 时间先后排列**。
+
+**当前影响**：
+
+- 对于表示窗口显示而言，影响极小——同天多次自定义时间调课是极罕见的场景。
+- `session_key` 的最终赋值顺序可能与实际上课时间顺序不一致（例如下午课的编号早于上午课）。
+
+**建议修正**：
+
+将排序键改为三元组，`custom_start`（空字符串 `""` 在比较中排在非空值之前，可作为合理默认）：
+
+```python
+# 改进后的排序键
+result.sort(key=lambda sc: (sc.date, sc.period, sc.custom_start))
+```
+
+三处排序调用均需同步修改。
+
+**影响**：低（极罕见场景；不影响典型使用的正确性）
+
+**发现时机**：2026-03-03，文档审查 `docs/cn/03_调度逻辑规格.md` 过程中
+
+---

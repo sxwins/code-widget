@@ -4,6 +4,38 @@
 
 ---
 
+## [1.0.4] — 2026-03-03 JST
+
+### 修正：02_架构设计.md（第二轮外部审查后修正）
+
+以下为对外部审查员反馈的处理结果：
+
+#### 1A — 驳回：TeacherConfig 中不存在 `appearance` 字段
+
+审查员认为应将 `appearance: Appearance` 加入 `TeacherConfig` 代码片段。经代码核查，**审查员有误**：
+
+- `TeacherConfig` dataclass（`teacher_config.py:71-78`）确实无 `appearance` 字段。
+- `Appearance` 类定义于同文件，但由 `AppSettings` 使用，保存于 `settings.json`，与 `teacher_config.json` 无关。
+- 文档现行描述正确，无需修改。
+
+> **发现副作用**：`teacher_config.py` 模块 docstring（第3行）中列有 `appearance{}`，但代码实际不存储它——这是一处代码注释陈旧（stale docstring）。已记录于项目根目录新增的 `TECHNICAL_DEBT.md`（TD-01）。
+
+#### 1B — 已完成：`AppSettings` 中 `Appearance` 来源注明
+
+审查员建议在 §3.3 中明确指出 `Appearance` 复用自 `teacher_config.py`。核查后，文档已有此注释（`# 复用 teacher_config.py 中的 Appearance 数据类`），无需额外修改。
+
+#### 2A — 修正：§1 窗口期参数说明（已实施）
+
+- **问题**：§1 架构概述将窗口期描述为固定的"上课前 10 分钟至上课开始后 30 分钟"，未体现其可配置性（与 §3.2 中 `Settings` 的定义及 `01_业务需求.md` 不一致）。
+- **修正**：改为"默认课前 10 分钟至课后 30 分钟，可通过 `Settings.pre_class_minutes` / `post_class_minutes` 配置"。
+
+#### 2B — 修正：§4 补充 `intensive` 类型不参与排课（已实施）
+
+- **问题**：§4 课程类型体系开头写"所有课程均恰好产生 14 次授课记录"，但 `scheduler.py:35-36` 对 `intensive` 类型直接 `return []`，不生成任何记录。
+- **修正**：将"所有课程"限定为"排课引擎支持的6种类型"，并补充注明 `intensive` 不参与自动排课。
+
+---
+
 ## [1.0.3] — 2026-03-03 JST · commit `0fb313b`
 
 ### 修正：02_架构设计.md（自审后修正）

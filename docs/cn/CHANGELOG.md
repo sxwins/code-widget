@@ -4,6 +4,38 @@
 
 ---
 
+## [1.0.9] — 2026-03-03 JST · commit `(pending)`
+
+### 修正：05_界面规格.md（自审后修正）
+
+经逐行比对 `attendance_window.py`、`tray.py`、`config_dialog.py`、`main.py`，文档整体准确，发现以下4处问题：
+
+#### 1. §5.1 列宽说明文误将列 0 纳入 ×1.2 组（重要）
+
+- **问题**：说明文写"列 0（ID）和列 2、3…先按内容自动调整，再固定为自然宽度的 1.2 倍"。
+- **证据**：`config_dialog.py:817`：`for col in (2, 3):` — 仅对列 2、3 执行 ×1.2；列 0 保持 `ResizeToContents` 不做额外缩放。
+- **修正**：移除"列 0（ID）和"，并补充说明列 0 保持 ResizeToContents。
+
+#### 2. §5.2 衝突検出的 custom_start 时间窗口写成"90分钟"（重要）
+
+- **问题**：文档写"以 start → start + 90分钟 作为时间窗口"，但代码从 school_config 第一时限实际时长计算。
+- **证据**：`config_dialog.py:1013-1017`：`duration = first.end - first.start`；2026 年度 period 1 = 8:50→10:30 = 100 分钟，90 是未读到 periods 时的回退值。
+- **修正**：改为"以第一时限实际时长（当前 100 分钟；fallback 90 分钟）"。
+
+#### 3. §8.2 声称 skip 不在調整表格显示，但代码无类型过滤（重要）
+
+- **问题**：文档写"skip 类型的 override 不在此表格中显示"。
+- **证据**：`config_dialog.py:904`：`for ov in self.teacher_config.overrides:` — 无类型过滤，skip 也进入表格（新日付/新時限列为空）。
+- **修正**：改为说明所有类型均显示，skip 行的新日付和新時限列为空白。
+
+#### 4. §2.2 和附录 A 的 code_font_family 默认值写成 "Courier New"（中等）
+
+- **问题**：`Appearance.code_font_family` 默认值为 `"Arial"`；`attendance_window.__init__` 硬编码 Courier New，但 `win.apply_appearance()` 在 `win.show()` 之前被调用，用户看到的有效默认字体是 Arial。
+- **证据**：`teacher_config.py:60`：`code_font_family: str = "Arial"`；`main.py:147`：`win.apply_appearance(app_settings.appearance)` 在 `win.show()` 之前。
+- **修正**：附录 A 改为 "Arial"；§2.2 加注区分硬编码初始值与有效默认值。
+
+---
+
 ## [1.0.8] — 2026-03-03 JST · commit `be68cdd`
 
 ### 修正：04_数据格式规格.md（自审后修正）

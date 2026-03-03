@@ -4,7 +4,7 @@
 
 ---
 
-## [1.0.7] — 2026-03-03 JST · commit `(pending)`
+## [1.0.7] — 2026-03-03 JST · commit `a1de819`
 
 ### 修正：03_调度逻辑规格.md + TECHNICAL_DEBT.md（外部审查 2B 修正）
 

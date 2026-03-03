@@ -4,6 +4,36 @@
 
 ---
 
+## [1.0.8] — 2026-03-03 JST · commit `(pending)`
+
+### 修正：04_数据格式规格.md（自审后修正）
+
+经逐行比对 `school_config.py`、`teacher_config.py`、`app_settings.py`、`main.py`、`scheduler.py`、`override.py` 及配置文件实例，发现以下4处问题：
+
+#### 1. §3.2 course_type 表格：Q2 和 Q4 slots 数量错误（重要）
+
+- **问题**：表格将 Q2 和 Q4 的 `slots 数量` 标为 `1`。
+- **证据**：`school_config.json` 显示 Q2 和 Q4 均有 `"slots_per_week": 2`；`scheduler.py:57` 公式 `actual_num = week_idx * ct.slots_per_week + slot_idx + 1` 以 `slots_per_week=2` 为乘数——若 Q2/Q4 课程只有 1 个 slot，生成的 session_key 将为 01, 03, 05…（全奇数），属配置错误。
+- **修正**：Q2 和 Q4 的 slots 数量改为 `2`。
+
+#### 2. §3.2 说明文：Q2/Q4 错误描述为每周 1 课时（重要）
+
+- **问题**："Q1 和 Q3 每周 2 课时…spring / autumn / Q2 / Q4 每周 1 课时，`slots` 含 1 个元素。"
+- **修正**：改为"Q1/Q2/Q3/Q4 类型均为每周 2 课时，`slots` 必须含 2 个元素"，并补充配置错误时的后果说明。
+
+#### 3. §3.3 reschedule：两者均缺省时的 fallback 行为未说明（次要）
+
+- **问题**：`new_period` 和 `new_start_time` 标注为"二选一"，未说明两者均缺省时的行为。
+- **证据**：`override.py:83`：`new_period = ov.new_period if ov.new_period is not None else ref.period`——两者均缺省时回退到被调课程的原时限，不报错。
+- **修正**：在两字段说明中补充 fallback 行为说明。
+
+#### 4. §3.6 `courses` 标为"必须"但代码使用 `.get()`（次要）
+
+- **问题**：`courses` 在总表中标为"必须"，但 `teacher_config.py:87` 使用 `data.get("courses", [])` → 缺省时为 `[]`，应为"可选"；且"必须"与默认值 `[]` 自相矛盾。
+- **修正**：改为"可选"。
+
+---
+
 ## [1.0.7] — 2026-03-03 JST · commit `a1de819`
 
 ### 修正：03_调度逻辑规格.md + TECHNICAL_DEBT.md（外部审查 2B 修正）

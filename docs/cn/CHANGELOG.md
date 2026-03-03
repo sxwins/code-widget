@@ -4,6 +4,38 @@
 
 ---
 
+## [1.0.10] — 2026-03-03 JST · commit `pending`
+
+### 修正：06_数据流图.md（自审后修正）
+
+经逐行比对 `main.py`、`attendance_window.py`、`engine/scheduler.py`、`models/teacher_config.py`，文档整体准确，发现以下4处问题（§3 修复已在审查时同步提交，此处记录全部4处）：
+
+#### 1. §3 节标题：_tick 触发条件遗漏"加载新配置文件时"（次要）
+
+- **问题**：触发条件描述为"每30秒（以及启动时、配置保存时立即触发）"，遗漏第四个触发点。
+- **证据**：`main.py` 中 `on_config_file_loaded()` 末尾调用 `_tick()`，与 `on_config_saved()` 的处理相同。
+- **修正**：补充"加载新配置文件时"至两处触发条件说明。
+
+#### 2. §4 示例 key 未零填充（次要）
+
+- **问题**：代码示例中 key 写为 `"MATH101_3"`。
+- **证据**：`scheduler.py:57` 使用 `f"{i+1:02d}"` 格式化 session_key，始终零填充为两位数。
+- **修正**：改为 `"MATH101_03"`。
+
+#### 3. §4 临时码清除流程缺少 None 守卫（次要）
+
+- **问题**：`on_temp_code_cleared` 流程图中，`win.update_class(...)` 显示为无条件调用。
+- **证据**：`main.py` 中 `on_temp_code_cleared` 仅在 `_last_active[0] is not None` 时才调用 `win.update_class()`，避免向窗口传入 None。
+- **修正**：补充 `if _last_active[0] is not None:` 条件分支及注释。
+
+#### 4. §8 外观配置项误含"透明度"（重要）
+
+- **问题**：`appearance` 箭头说明写"（字体/颜色/透明度）"，将透明度列为可配置外观属性。
+- **证据**：`Appearance` 类（`teacher_config.py:58-67`）仅含字体和颜色字段；透明度由 `attendance_window.py` 中 `WA_TranslucentBackground` 硬编码实现，不属于外观配置。
+- **修正**：改为"（字体/颜色）"并加注说明透明度为硬编码非配置项。
+
+---
+
 ## [1.0.9] — 2026-03-03 JST · commit `e535572`
 
 ### 修正：05_界面规格.md（自审后修正）

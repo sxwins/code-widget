@@ -4,6 +4,27 @@
 
 ---
 
+## [1.0.5] — 2026-03-03 JST
+
+### 修正：02_架构设计.md + TECHNICAL_DEBT.md（1A 重新评估）
+
+#### 背景
+
+上一轮对审查员 1A（"TeacherConfig 遗漏 appearance 字段"）的处理过于简单——仅核查了 `TeacherConfig` dataclass 不含该字段，而忽略了 `Appearance` 类本身定义于 `teacher_config.py` 这一架构信号。
+
+用户指出：`Appearance` 定义在 `teacher_config.py` 是历史设计痕迹（外观参数曾属于教师配置，后迁移至 `settings.json`），迁移时代码未完整清理。这一信息对重写团队有重要参考价值。
+
+#### 修正：02_架构设计.md §3.2（Appearance 节后新增设计背景说明）
+
+- 补充说明 `Appearance` 定义位置与实际使用位置不一致的历史原因：外观参数原属教师配置，后迁移为全局配置，类定义留在原文件未移动。
+- 提示重写团队：建议将 `Appearance` 定义移至 `app_settings.py` 或独立模块，使定义位置与逻辑归属一致。
+
+#### 修正：TECHNICAL_DEBT.md TD-01（扩充）
+
+- 将原有的"module docstring 过时"条目扩充为完整的设计迁移遗留说明，涵盖：Appearance 类定义位置问题、跨模块 import 方向颠倒、module docstring 残留三个方面。
+
+---
+
 ## [1.0.4] — 2026-03-03 JST · commit `9ee07d1`
 
 ### 修正：02_架构设计.md（第二轮外部审查后修正）

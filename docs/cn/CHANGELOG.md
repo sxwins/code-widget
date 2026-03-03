@@ -4,6 +4,24 @@
 
 ---
 
+## [1.0.6] — 2026-03-03 JST
+
+### 修正：03_调度逻辑规格.md（自审后修正）
+
+经逐行比对 `engine/scheduler.py`、`engine/override.py`、`models/school_config.py`、`models/teacher_config.py` 及 `config/school_config.json`，文档整体准确，发现以下2处措辞问题，均在 §2.4 Override 字段说明：
+
+#### 1. Override `period` 字段分组不准确
+
+- **问题**：`period` 字段被归入 "skip 和 makeup 使用" 分组，但 `_apply_skip` 函数仅读取 `course_id` 和 `date`，完全不使用 `period`。该字段仅属于 makeup。
+- **修正**：将分组拆分为 "skip / makeup 共用"（仅 `date`）和 "makeup 专用"（`period`），并在 `period` 描述中加注 skip 不使用此字段。
+
+#### 2. `new_start_time` 描述措辞自相矛盾
+
+- **问题**："与 new_period 互斥，优先级更高" 逻辑矛盾——"互斥"意味着不能共存，但"优先级更高"意味着可以共存。代码实际行为（`_apply_reschedule`）是：允许两者同时存在，`new_start_time` 优先（`new_period` 被忽略，`period` 固定设为 0）。
+- **修正**：改为"与 new_period 二选一，如同时提供则本字段优先（new_period 被忽略，period 固定设为 0）"。
+
+---
+
 ## [1.0.5] — 2026-03-03 JST · commit `d18659e`
 
 ### 修正：02_架构设计.md + TECHNICAL_DEBT.md（1A 重新评估）

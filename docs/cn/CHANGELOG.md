@@ -1,0 +1,86 @@
+# docs/cn 变更记录
+
+本文件记录中文文档集（`docs/cn/`）的所有新增与修订历史。
+
+---
+
+## [1.0.1] — 2026-03-03
+
+### 修正：01_业务需求.md（代码审查后修正）
+
+以下6处修正均以代码为基准，确保文档与现行实现一致：
+
+#### 1. 新增 course_id 字段说明（§4.2.1）
+
+- **问题**：原文档课程字段表中缺少 `course_id`，而该字段是系统的核心唯一标识符——所有 Override 通过 `course_id` 关联课程，出勤码以 `{course_id}_{session_key}` 为键存储。
+- **修正**：在4.2.1课程字段表顶部新增"课程唯一ID"行，注明其用途、格式及唯一性要求。
+
+#### 2. 修正冲突处理规则（§5.3）
+
+- **问题**：文档规则3"按课程名称字典序"为杜撰内容，`get_active_class` 的排序键仅为 `(abs(now - window_start), period)`，不含任何字典序比较。此外，规则1描述"更晚"不精确。
+- **修正**：
+  - 删除规则3（字典序）。
+  - 将规则1改为"显示窗口开始时间与当前时刻绝对差值最小"，与代码实现一致。
+
+#### 3. 新增随机码生成功能（§6.3，F-DW-06）
+
+- **问题**：原文档完全未提及 `ConfigDialog` 预览标签页中的"コード生成"按钮功能。实际实现为：为当前所选课程的全部回次生成4位随机数字码（`random.randint(0, 9999):04d`）。
+- **修正**：在§6.3功能需求表中新增 F-DW-06 条目。
+
+#### 4. 修正展示窗口显示内容（§7.1，F-RT-04）
+
+- **问题**：原文档要求展示窗口显示"课程名、今天是第几回、**当前日期**"，F-RT-04 亦列出"星期、时限、日期"。但 `AttendanceWindow.update_class` 实际只设置课程名（`label_course`）和第几回（`label_session`，格式"第X回"），不显示日期、星期或时限。
+- **修正**：
+  - §7.1 布局要求改为"课程名、今天是第几回（当前实现不显示日期）"。
+  - F-RT-04 更新为反映实际显示字段。
+
+#### 5. 窗口时长注明可配置（§5.2，AC-03）
+
+- **问题**：原文档将"课前10分钟/课后30分钟"描述为固定值，但 `TeacherConfig.Settings` 中 `pre_class_minutes` 和 `post_class_minutes` 均可配置，存储于 `teacher_config.json` 的 `settings` 字段。
+- **修正**：
+  - §5.2 公式中将硬编码数值替换为参数名，并添加可配置说明。
+  - AC-03 改为"默认 N=10/M=30，可配置"。
+
+#### 6. 修正调整功能的 UI 范围说明（F-CA-03）
+
+- **问题**：原文档暗示停课/补课/调课均可通过 UI 操作添加。实际上 `_on_add_adjustment` 仅调用 `RescheduleDialog`，只能创建 `reschedule` 类型的 Override；Skip 和 Makeup 类型无 UI 添加入口，需直接编辑 JSON。
+- **修正**：F-CA-03 改为"UI 支持添加调课（Reschedule）；停课和补课可直接编辑 JSON 录入"。
+
+---
+
+## [1.0.0] — 2026-03-03
+
+### 新增：中文文档集初始版本
+
+为支持别语言重写，新建 `docs/cn/` 目录，创建以下8个文档：
+
+#### README.md
+- 文档集索引：列出全部7份文档的简介、推荐阅读顺序及参考资源路径。
+
+#### 01_业务需求.md
+- 基于 `docs/requirements.md` 整理的中文业务需求说明书。
+- 涵盖：背景与问题、功能范围（In/Out Scope）、7个核心使用场景、三层数据模型（SchoolConfig / TeacherConfig / 运行时状态）、6条核心业务规则、功能需求表（F-CM/F-RT/F-DW/F-CA）、界面需求、技术要求、7条验收标准。
+
+#### 02_架构设计.md
+- 基于 `docs/findings.md` 整理的架构设计文档。
+- 涵盖：架构概述、项目目录结构（含逐文件说明）、所有数据类定义（SchoolConfig / TeacherConfig / AppSettings / ScheduledClass）、6种课程类型体系、技术选型理由（PySide6 vs PyQt6 授权分析）、三个配置文件的关系说明。
+
+#### 03_调度逻辑规格.md（743行）
+- 排课引擎的完整算法规格，可供重写团队无需阅读源码即可实现。
+- 涵盖：ScheduledClass 数据结构、单槽/双槽课程的日期解析算法（含 Q 课程 `actual_num` 公式推导）、三种 Override（Skip/Makeup/Reschedule）的详细应用逻辑、`_reassign_session_keys` 分组与编号规则、`compute_window` 与 `get_active_class` 算法、完整带真实日期数据的工作示例。
+
+#### 04_数据格式规格.md
+- 三个 JSON 配置文件的完整字段说明，含必填/可选标注。
+- 涵盖：`school_config.json`（periods/course_types/semesters 全字段）、`teacher_config.json`（courses/overrides/attendance_codes/window_position/settings 全字段及 Override 三类型字段差异）、`settings.json`（active_config + 8个 appearance 字段）、开发模式与打包后的文件位置、首次运行初始化行为。
+
+#### 05_界面规格.md（927行）
+- UI 完整规格，含 ASCII 线框图。
+- 涵盖：AttendanceWindow（窗口标志、基础尺寸、布局、右键菜单6项、出勤码输入流程、3级码优先级、4个信号）；TrayIcon（菜单3项、动态文本规则、ToolTip格式、单击行为）；ConfigDialog 5个标签页（授業/日程プレビュー/調整/外観/About）完整规格；CourseEditDialog 与 RescheduleDialog 子对话框；保存逻辑；窗口状态转换图。
+
+#### 06_数据流图.md
+- 从程序启动到出勤码显示的完整数据流，含 ASCII 流程图。
+- 涵盖：`main()` 9步启动流程、`_tick()` 30秒定时器循环、`_code_for()` 三级码优先级、配置保存与加载新配置文件的信号传播链、`_resource()`/`_user_data_dir()` 文件路径解析（含 macOS .app 4层向上查找）、数据依赖关系图、完整时序图。
+
+#### 07_平台差异说明.md
+- macOS 与 Windows 平台差异的技术说明。
+- 涵盖：`Qt.WindowType.Tool` 标志的平台差异及原因（macOS 失焦隐藏问题）、可写配置目录的路径计算差异（Windows：exe同级；macOS：.app外4级向上）、`LSUIElement` 配置（当前版本已启用）、构建与图标格式差异（.ico/.icns）、系统托盘位置差异、差异汇总对照表。

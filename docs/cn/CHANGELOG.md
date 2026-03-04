@@ -4,6 +4,14 @@
 
 ---
 
+## [1.0.16] — 2026-03-04 JST · commit `pending`
+
+### 更新：TECHNICAL_DEBT.md — 新增 TD-07（手动测试发现）
+
+- **[TD-07] 中**：`ConfigDialog` 在初始化时对 `teacher_config` 执行深拷贝（`config_dialog.py:421`）；`_on_code_changed`（`config_dialog.py:948`）仅更新深拷贝的 `attendance_codes`，不影响 `main.py` 中 `_code_for()` 的数据来源；`_tick()` 的早返回守卫（`main.py:243`）在活跃课程不变时跳过 UI 更新。三者叠加导致：用户编辑出席码后，出席窗口不即时刷新，需等待点击"保存"后由 `on_config_saved → _last_active[0]=None → _tick()` 路径触发更新。
+
+---
+
 ## [1.0.15] — 2026-03-04 JST · commit `b7e7681`
 
 ### 更新：TECHNICAL_DEBT.md — 新增 TD-03 至 TD-06（外部代码评审结果）

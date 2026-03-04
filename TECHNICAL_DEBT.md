@@ -253,3 +253,75 @@ QTimer.singleShot(0, _tick)   # ← 首次 tick，决定是否隐藏
 **发现时机**：2026-03-04，外部代码评审
 
 ---
+
+## [TD-07] 在设置对话框中修改出席码后，主窗口不即时刷新——需等待点击"保存"【中】
+
+**文件**：`src/gui/config_dialog.py`、`src/main.py`
+
+**问题描述**：
+
+`ConfigDialog` 在初始化时对 `teacher_config` 执行深拷贝（第421行）：
+
+```python
+# config_dialog.py:421
+self.teacher_config = copy.deepcopy(teacher_config)
+```
+
+用户在日程预览标签页（Tab 2）内联编辑出席码时，`_on_code_changed`（第935–950行）仅更新这份深拷贝的 `attendance_codes`：
+
+```python
+# config_dialog.py:948
+self.teacher_config.attendance_codes[key] = code
+```
+
+而 `main.py` 中的 `teacher_config.attendance_codes`（`_code_for()` 的数据来源）**在此时不受任何影响**。
+
+与此同时，`_tick()` 的早返回守卫（第243行）会在活跃课程不变时跳过所有 UI 更新：
+
+```python
+# main.py:243
+if active == _last_active[0]:
+    return   # 不调用 win.update_class()
+```
+
+因此，在用户点击"保存"按钮之前，出席窗口不会显示新出席码。
+
+**数据流示意**：
+
+```
+用户编辑出席码
+    ↓
+_on_code_changed
+    ↓  更新
+ConfigDialog.teacher_config.attendance_codes   ← 深拷贝
+                                               ↑ 无连接
+main.py 的 teacher_config.attendance_codes     ← _code_for() 读取来源（未变化）
+```
+
+**点击"保存"后的路径（正确运行）**：
+
+```
+_on_save()
+    ├─ _orig_teacher.__dict__.update(self.teacher_config.__dict__)  ← 同步到原始对象
+    └─ config_saved.emit()
+           ↓
+       on_config_saved()
+           ├─ _last_active[0] = None     ← 强制重新评估
+           └─ _tick()
+                  ↓
+              win.update_class(active, _code_for(active))  ← 显示新出席码 ✓
+```
+
+**实际影响**：
+
+用户在对话框内编辑出席码后，看到表格单元格已显示新码，但出席窗口仍显示旧码。两者状态不一致，直到点击"保存"后才同步。若当前正处于上课时段，出席窗口会在保存后立即刷新；若用户未意识到需要点击"保存"，窗口将持续显示旧码。
+
+**建议修正**：
+
+在 `_on_code_changed` 中，同步更新 `self._orig_teacher.attendance_codes`，并触发出席窗口刷新（例如通过新增一个 `code_changed` 信号，或直接同步写入原始对象）。或者通过界面提示（如"有未保存的更改"）让用户明确知道需要点击"保存"才能生效。
+
+**影响**：中（功能预期与实际行为不一致；在上课期间修改出席码时尤为明显）
+
+**发现时机**：2026-03-04，手动功能测试
+
+---

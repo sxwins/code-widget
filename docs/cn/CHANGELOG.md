@@ -4,11 +4,13 @@
 
 ---
 
-## [1.0.16] — 2026-03-04 JST · commit `pending`
+## [1.0.16] — 2026-03-04 JST · commit `ec3c70b`（已修订）
 
-### 更新：TECHNICAL_DEBT.md — 新增 TD-07（手动测试发现）
+### 更新：TECHNICAL_DEBT.md — TD-07 升级为高严重度（手动测试确认）
 
-- **[TD-07] 中**：`ConfigDialog` 在初始化时对 `teacher_config` 执行深拷贝（`config_dialog.py:421`）；`_on_code_changed`（`config_dialog.py:948`）仅更新深拷贝的 `attendance_codes`，不影响 `main.py` 中 `_code_for()` 的数据来源；`_tick()` 的早返回守卫（`main.py:243`）在活跃课程不变时跳过 UI 更新。三者叠加导致：用户编辑出席码后，出席窗口不即时刷新，需等待点击"保存"后由 `on_config_saved → _last_active[0]=None → _tick()` 路径触发更新。
+手动测试确认：点击保存后出席窗口也不更新（重启后正常），将 TD-07 从"中"升级为"高"，并补充完整根本原因分析：
+
+- **[TD-07] 高**（修订）：深拷贝（`config_dialog.py:421`）+ `_on_code_changed` 只更新副本（`config_dialog.py:948`）；`on_config_saved()` 中 `_build_all_scheduled()` 调用无异常保护，若排课解析失败，PySide6 槽机制静默吞噬异常，`_last_active[0]=None; _tick()` 不执行，UI 刷新中断。文件在信号发送前已成功写入，故重启可见新码，但内存路径失效。与 [TD-04]（未保护的日期解析）存在叠加效应。
 
 ---
 

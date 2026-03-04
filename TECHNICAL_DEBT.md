@@ -254,74 +254,91 @@ QTimer.singleShot(0, _tick)   # ← 首次 tick，决定是否隐藏
 
 ---
 
-## [TD-07] 在设置对话框中修改出席码后，主窗口不即时刷新——需等待点击"保存"【中】
+## [TD-07] 在设置对话框中修改出席码并保存后，主窗口不刷新显示新出席码【高】
 
 **文件**：`src/gui/config_dialog.py`、`src/main.py`
 
-**问题描述**：
+**已确认行为**（手动测试）：
 
-`ConfigDialog` 在初始化时对 `teacher_config` 执行深拷贝（第421行）：
+在预览标签页修改出席码 → 点击"保存" → 出席窗口继续显示旧码。退出程序后重启 → 出席窗口正确显示新码。
+
+此行为证明：**JSON 文件保存成功，但内存中的 UI 刷新路径失效。**
+
+---
+
+**根本原因分析**：
+
+`ConfigDialog` 初始化时对 `teacher_config` 执行深拷贝（第421行）：
 
 ```python
 # config_dialog.py:421
 self.teacher_config = copy.deepcopy(teacher_config)
 ```
 
-用户在日程预览标签页（Tab 2）内联编辑出席码时，`_on_code_changed`（第935–950行）仅更新这份深拷贝的 `attendance_codes`：
+`_on_code_changed`（第948行）仅更新深拷贝：
 
 ```python
 # config_dialog.py:948
 self.teacher_config.attendance_codes[key] = code
 ```
 
-而 `main.py` 中的 `teacher_config.attendance_codes`（`_code_for()` 的数据来源）**在此时不受任何影响**。
-
-与此同时，`_tick()` 的早返回守卫（第243行）会在活跃课程不变时跳过所有 UI 更新：
+`_on_save`（第1137–1150行）的设计意图是：保存文件 → 将深拷贝同步回原始对象 → 触发 UI 刷新：
 
 ```python
-# main.py:243
-if active == _last_active[0]:
-    return   # 不调用 win.update_class()
+# config_dialog.py:1137-1150
+save_teacher_config(self.teacher_config, self.save_path)          # ← 文件保存成功
+self._orig_teacher.__dict__.update(self.teacher_config.__dict__)  # ← 同步到原始对象
+...
+self.config_saved.emit()  # ← 触发 on_config_saved()
 ```
 
-因此，在用户点击"保存"按钮之前，出席窗口不会显示新出席码。
+`on_config_saved()` 的设计意图是重建排课表并强制 UI 刷新：
 
-**数据流示意**：
+```python
+# main.py:176-181
+def on_config_saved():
+    nonlocal all_scheduled
+    all_scheduled = _build_all_scheduled(teacher_config, school_config)  # ← 此处可能抛出异常
+    win.apply_appearance(app_settings.appearance)
+    _last_active[0] = None   # ← 若上一行抛出，此行不会执行
+    _tick()                  # ← 若上一行抛出，此行不会执行
+```
+
+**失效机制**：`_build_all_scheduled()` 内部（`override.py` 第40、52、67、78行）包含无保护的 `date.fromisoformat()` 调用（即 [TD-04] 所记录的问题）。若任何 override 记录的日期字段格式异常，`_build_all_scheduled()` 会抛出 `ValueError`。
+
+在 PySide6 的 Qt 信号槽机制中，槽函数中未捕获的异常会被**静默吞噬**——异常信息打印到 stderr，但不会向调用方传播，`config_saved.emit()` 正常返回。结果是：
 
 ```
-用户编辑出席码
+_on_save() 调用 config_saved.emit()
     ↓
-_on_code_changed
-    ↓  更新
-ConfigDialog.teacher_config.attendance_codes   ← 深拷贝
-                                               ↑ 无连接
-main.py 的 teacher_config.attendance_codes     ← _code_for() 读取来源（未变化）
+on_config_saved() 开始执行
+    ↓
+_build_all_scheduled() 抛出 ValueError（日期解析失败）
+    ↓ 异常被 PySide6 吞噬
+on_config_saved() 中断，_last_active[0] 未重置，_tick() 未调用
+    ↓
+win.update_class() 从未被调用
+    ↓
+出席窗口继续显示旧码
 ```
 
-**点击"保存"后的路径（正确运行）**：
+与此同时，文件在 `config_saved.emit()` 之前已由 `save_teacher_config()` 写入，因此重启后能读取到新码。
 
-```
-_on_save()
-    ├─ _orig_teacher.__dict__.update(self.teacher_config.__dict__)  ← 同步到原始对象
-    └─ config_saved.emit()
-           ↓
-       on_config_saved()
-           ├─ _last_active[0] = None     ← 强制重新评估
-           └─ _tick()
-                  ↓
-              win.update_class(active, _code_for(active))  ← 显示新出席码 ✓
-```
+**两个问题的叠加**：
 
-**实际影响**：
+| 问题 | 来源 |
+|------|------|
+| `on_config_saved()` 中的异常被静默吞噬，UI 刷新链中断 | [TD-04] 未保护的解析调用 |
+| 即使无异常，`_on_code_changed` 更新深拷贝、`_tick()` 守卫（`active == _last_active[0]`）也会跳过刷新，直到 Save 触发 | [TD-07] 深拷贝设计 |
 
-用户在对话框内编辑出席码后，看到表格单元格已显示新码，但出席窗口仍显示旧码。两者状态不一致，直到点击"保存"后才同步。若当前正处于上课时段，出席窗口会在保存后立即刷新；若用户未意识到需要点击"保存"，窗口将持续显示旧码。
+**影响**：高（正常操作流程下，修改出席码后保存，窗口始终显示旧码；仅重启才能恢复正确显示）
 
 **建议修正**：
 
-在 `_on_code_changed` 中，同步更新 `self._orig_teacher.attendance_codes`，并触发出席窗口刷新（例如通过新增一个 `code_changed` 信号，或直接同步写入原始对象）。或者通过界面提示（如"有未保存的更改"）让用户明确知道需要点击"保存"才能生效。
+1. 在 `on_config_saved()` 中为 `_build_all_scheduled()` 添加 try/except，确保即使排课重建失败，`_last_active[0] = None; _tick()` 也一定执行
+2. 为所有 override 日期解析添加 try/except（参见 [TD-04]），从根本上消除异常来源
+3. 考虑将 `_on_code_changed` 改为直接更新原始 `teacher_config.attendance_codes`（跳过深拷贝中转），简化同步路径
 
-**影响**：中（功能预期与实际行为不一致；在上课期间修改出席码时尤为明显）
-
-**发现时机**：2026-03-04，手动功能测试
+**发现时机**：2026-03-04，手动功能测试（确认点击保存后 UI 仍不更新，重启后正常）
 
 ---

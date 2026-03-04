@@ -1,0 +1,194 @@
+{
+  "teacher_name": "",
+  "academic_year": "2026",
+  "courses": [
+    {
+      "id": "test1",
+      "name": "test1",
+      "course_code": "",
+      "course_type": "spring",
+      "slots": [
+        {
+          "weekday": "Monday",
+          "period": 1
+        }
+      ]
+    },
+    {
+      "id": "test2",
+      "name": "test2",
+      "course_code": "",
+      "course_type": "autumn",
+      "slots": [
+        {
+          "weekday": "Monday",
+          "period": 2
+        }
+      ]
+    },
+    {
+      "id": "test3",
+      "name": "test3",
+      "course_code": "",
+      "course_type": "Q1",
+      "slots": [
+        {
+          "weekday": "Tuesday",
+          "period": 1
+        },
+        {
+          "weekday": "Tuesday",
+          "period": 2
+        }
+      ]
+    },
+    {
+      "id": "test4",
+      "name": "test4",
+      "course_code": "",
+      "course_type": "Q2",
+      "slots": [
+        {
+          "weekday": "Tuesday",
+          "period": 1
+        },
+        {
+          "weekday": "Thursday",
+          "period": 1
+        }
+      ]
+    },
+    {
+      "id": "test5",
+      "name": "test5",
+      "course_code": "",
+      "course_type": "Q3",
+      "slots": [
+        {
+          "weekday": "Wednesday",
+          "period": 3
+        },
+        {
+          "weekday": "Friday",
+          "period": 3
+        }
+      ]
+    },
+    {
+      "id": "test6",
+      "name": "test6",
+      "course_code": "",
+      "course_type": "Q4",
+      "slots": [
+        {
+          "weekday": "Wednesday",
+          "period": 3
+        },
+        {
+          "weekday": "Friday",
+          "period": 3
+        }
+      ]
+    },
+    {
+      "id": "test7",
+      "name": "test7",
+      "course_code": "",
+      "course_type": "spring",
+      "slots": [
+        {
+          "weekday": "Monday",
+          "period": 3
+        }
+      ]
+    },
+    {
+      "id": "test8",
+      "name": "test8",
+      "course_code": "",
+      "course_type": "spring",
+      "slots": [
+        {
+          "weekday": "Tuesday",
+          "period": 3
+        }
+      ]
+    },
+    {
+      "id": "test10",
+      "name": "test10",
+      "course_code": "",
+      "course_type": "spring",
+      "slots": [
+        {
+          "weekday": "Wednesday",
+          "period": 1
+        }
+      ]
+    }
+  ],
+  "overrides": [
+    {
+      "type": "reschedule",
+      "course_id": "test1",
+      "original_date": "2026-04-20",
+      "original_period": 1,
+      "new_date": "2026-03-02",
+      "new_start_time": "23:10"
+    },
+    {
+      "type": "reschedule",
+      "course_id": "test1",
+      "original_date": "2026-04-27",
+      "original_period": 1,
+      "new_date": "2026-03-03",
+      "new_start_time": "18:00"
+    },
+    {
+      "type": "reschedule",
+      "course_id": "test1",
+      "original_date": "2026-05-11",
+      "original_period": 1,
+      "new_date": "2026-03-03",
+      "new_start_time": "13:00"
+    }
+  ],
+  "attendance_codes": {
+    "test6_01": "6817",
+    "test6_02": "5709",
+    "test6_03": "0553",
+    "test6_04": "2213",
+    "test6_05": "5479",
+    "test6_06": "2016",
+    "test6_07": "6325",
+    "test6_08": "7762",
+    "test6_09": "5844",
+    "test6_10": "7343",
+    "test6_11": "8793",
+    "test6_12": "2547",
+    "test6_13": "7484",
+    "test6_14": "2310",
+    "test1_01": "1111",
+    "test1_02": "5035",
+    "test1_03": "2091",
+    "test1_04": "9709",
+    "test1_05": "3752",
+    "test1_06": "8748",
+    "test1_07": "5764",
+    "test1_08": "5445",
+    "test1_09": "7188",
+    "test1_10": "1834",
+    "test1_11": "7797",
+    "test1_12": "3589",
+    "test1_13": "3199",
+    "test1_14": "6785"
+  },
+  "window_position": {
+    "x": 1090,
+    "y": 139
+  },
+  "settings": {
+    "pre_class_minutes": 10,
+    "post_class_minutes": 30
+  }
+}

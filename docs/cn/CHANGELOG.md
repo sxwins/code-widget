@@ -4,7 +4,7 @@
 
 ---
 
-## [1.0.15] — 2026-03-04 JST · commit `pending`
+## [1.0.15] — 2026-03-04 JST · commit `b7e7681`
 
 ### 更新：TECHNICAL_DEBT.md — 新增 TD-03 至 TD-06（外部代码评审结果）
 

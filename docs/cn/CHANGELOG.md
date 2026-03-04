@@ -4,6 +4,21 @@
 
 ---
 
+## [1.0.15] — 2026-03-04 JST · commit `pending`
+
+### 更新：TECHNICAL_DEBT.md — 新增 TD-03 至 TD-06（外部代码评审结果）
+
+根据外部代码评审，核实并记录了四项代码级问题：
+
+- **[TD-03] 高**：`config_dialog.py` 编辑 skip/makeup override 时，`RescheduleDialog` 将 `type` 硬编码为 `"reschedule"`，导致保存后记录类型被静默改写（`config_dialog.py:392, 1084`）
+- **[TD-04] 高**：`override.py` 四处 `date.fromisoformat()` 及 `scheduler.py` 的 `custom_start.split(":")` 均无 try/except；`main.py:131` 的 `_build_all_scheduled()` 调用在启动 try/except 块之外，配置格式错误时直接崩溃
+- **[TD-05] 中**：`_tick()` 在活跃课程不变时提前返回（`main.py:243`），临时码过期后不触发 UI 更新，过期码持续显示直到下次状态变化
+- **[TD-06] 中**：`main.py:148` 无条件 `win.show()`，首次 `_tick()` 之前窗口已可见，非上课时段启动时窗口短暂闪现
+
+四条均已由源码核实（相关行号：`override.py:40,52,67,78`；`scheduler.py:94`；`main.py:131,148,212-224,243`；`config_dialog.py:392,1084`）。
+
+---
+
 ## [1.0.14] — 2026-03-03 JST · commit `b81a817`
 
 ### 新增：09～12 标准测试文档四件套

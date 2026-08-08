@@ -71,7 +71,7 @@ if _sys.platform == "darwin":
         info_plist={
             "LSUIElement": True,             # hide from Dock (tray-only app)
             "NSHighResolutionCapable": True,
-            "CFBundleShortVersionString": "1.0.0",
-            "CFBundleVersion": "1.0.0",
+            "CFBundleShortVersionString": "1.1.0",
+            "CFBundleVersion": "1.1.0",
         },
     )

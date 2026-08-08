@@ -49,7 +49,7 @@ from models.teacher_config import (
 
 APP_VERSION = "1.1.0"
 APP_RELEASE_DATE = "2026-08-08"
-APP_AUTHOR = "麗澤大学"
+APP_AUTHOR = "Xiaowei SHAO"
 
 WEEKDAY_JP = {
     "Monday": "月",
@@ -729,7 +729,7 @@ class ConfigDialog(QDialog):
             "<table cellspacing='5'>"
             f"<tr><td align='right'><b>バージョン</b></td><td>&nbsp;v{APP_VERSION}</td></tr>"
             f"<tr><td align='right'><b>リリース日</b></td><td>&nbsp;{APP_RELEASE_DATE}</td></tr>"
-            f"<tr><td align='right'><b>所属</b></td><td>&nbsp;{APP_AUTHOR}</td></tr>"
+            f"<tr><td align='right'><b>作者</b></td><td>&nbsp;{APP_AUTHOR}</td></tr>"
             "<tr><td align='right'><b>技術</b></td><td>&nbsp;Python 3.12 + PySide6</td></tr>"
             "<tr><td align='right'><b>開発補助</b></td><td>&nbsp;Claude Code (Anthropic)</td></tr>"
             "</table>"

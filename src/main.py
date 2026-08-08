@@ -137,9 +137,12 @@ def main():
     tray = TrayIcon(attendance_window=win)
     tray.show()
 
-    # Restore saved window position
+    # Restore saved window position; fall back to primary screen top-left if off-screen
     if teacher_config.window_position:
         win.move(teacher_config.window_position.x, teacher_config.window_position.y)
+        win_rect = win.frameGeometry()
+        if not any(s.geometry().intersects(win_rect) for s in app.screens()):
+            win.move(app.primaryScreen().geometry().topLeft())
 
     # Apply saved appearance and show window on startup
     win.apply_appearance(app_settings.appearance)

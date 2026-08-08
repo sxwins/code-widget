@@ -41,3 +41,25 @@ def test_tray_tooltip_active_class(qtbot, qapp):
     tray.update_status(sc)
     assert "初年次セミナーA" in tray.toolTip()
     assert "07" in tray.toolTip()
+
+
+def test_toggle_label_shows_hide_when_window_visible(qtbot, qapp):
+    from gui.tray import TrayIcon
+    from gui.attendance_window import AttendanceWindow
+    win = AttendanceWindow()
+    qtbot.addWidget(win)
+    tray = TrayIcon(attendance_window=win)
+    win.show()
+    tray._update_toggle_text()
+    assert tray._action_toggle.text() == "ウィンドウを隠す"
+
+
+def test_toggle_label_shows_display_when_window_hidden(qtbot, qapp):
+    from gui.tray import TrayIcon
+    from gui.attendance_window import AttendanceWindow
+    win = AttendanceWindow()
+    qtbot.addWidget(win)
+    tray = TrayIcon(attendance_window=win)
+    win.hide()
+    tray._update_toggle_text()
+    assert tray._action_toggle.text() == "ウィンドウを表示"

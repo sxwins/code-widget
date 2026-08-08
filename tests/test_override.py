@@ -128,3 +128,37 @@ class TestQ1MultiSlot:
         result = sorted(apply_overrides(list(q1_scheduled), [ov]), key=lambda s: (s.date, s.period))
         assert len(result) == 13
         assert [s.session_key for s in result] == [f"{n:02d}" for n in range(1, 14)]
+
+
+# ---------------------------------------------------------------------------
+# TD-04 — malformed date strings must not crash; bad records are silently skipped
+# ---------------------------------------------------------------------------
+
+class TestMalformedDates:
+    def test_skip_bad_date_no_crash(self, base_scheduled):
+        ov = Override(type="skip", course_id="EEE1000411", date="2026/04/16")
+        result = apply_overrides(list(base_scheduled), [ov])
+        assert len(result) == 14  # unchanged
+
+    def test_makeup_bad_date_no_crash(self, base_scheduled):
+        ov = Override(type="makeup", course_id="EEE1000411", date="invalid")
+        result = apply_overrides(list(base_scheduled), [ov])
+        assert len(result) == 14  # unchanged
+
+    def test_reschedule_bad_original_date_no_crash(self, base_scheduled):
+        ov = Override(
+            type="reschedule", course_id="EEE1000411",
+            original_date="2026/04/16", new_date="2026-04-18", new_period=2,
+        )
+        result = apply_overrides(list(base_scheduled), [ov])
+        assert len(result) == 14  # unchanged — original not removed, replacement not added
+
+    def test_reschedule_bad_new_date_removes_original_only(self, base_scheduled):
+        ov = Override(
+            type="reschedule", course_id="EEE1000411",
+            original_date="2026-04-16", original_period=1,
+            new_date="2026/04/18", new_period=2,
+        )
+        result = apply_overrides(list(base_scheduled), [ov])
+        assert len(result) == 13  # original removed, replacement skipped
+        assert not any(sc.date == date(2026, 4, 16) for sc in result)

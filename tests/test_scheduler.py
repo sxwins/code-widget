@@ -154,3 +154,33 @@ class TestDisplayWindow:
         # 2026-04-20 (Monday) has no Thursday class
         active = get_active_class(datetime(2026, 4, 20, 8, 50), scheduled, school, settings)
         assert active is None
+
+
+# ---------------------------------------------------------------------------
+# TD-04 — malformed custom_start raises descriptive ValueError
+# ---------------------------------------------------------------------------
+
+class TestCustomStartParsing:
+    def _make_sc_custom(self, custom_start: str):
+        from engine.scheduler import ScheduledClass
+        return ScheduledClass(
+            course_id="X", course_name="X",
+            date=date(2026, 4, 16), weekday="Thursday",
+            period=0, session_key="01", slot_index=0,
+            custom_start=custom_start,
+        )
+
+    def test_valid_custom_start(self, school):
+        sc = self._make_sc_custom("09:30")
+        ws, we = compute_window(sc, school, Settings())
+        assert ws.hour == 9 and ws.minute == 20  # 09:30 − 10 min pre
+
+    def test_malformed_custom_start_raises_valueerror(self, school):
+        sc = self._make_sc_custom("abc")
+        with pytest.raises(ValueError, match="custom_start"):
+            compute_window(sc, school, Settings())
+
+    def test_no_colon_custom_start_raises_valueerror(self, school):
+        sc = self._make_sc_custom("0930")
+        with pytest.raises(ValueError, match="custom_start"):
+            compute_window(sc, school, Settings())

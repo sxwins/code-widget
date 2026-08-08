@@ -241,9 +241,17 @@ def main():
 
     # Timer tick — called every TICK_MS (30 s) and immediately on startup / config save.
     # Only acts when the active class changes to avoid redundant UI updates.
+    _last_tick_time = [now()]
+
     def _tick():
+        current_time = now()
+        elapsed_ms = (current_time - _last_tick_time[0]).total_seconds() * 1000
+        if elapsed_ms > TICK_MS * 4:  # gap >> expected → system woke from sleep
+            _last_active[0] = None  # force full re-evaluation
+        _last_tick_time[0] = current_time
+
         tc_settings = teacher_config.settings if teacher_config.settings else Settings()
-        active = get_active_class(now(), all_scheduled, school_config, tc_settings)
+        active = get_active_class(current_time, all_scheduled, school_config, tc_settings)
         if active != _last_active[0]:
             _last_active[0] = active
             if active is not None:

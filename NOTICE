@@ -1,0 +1,29 @@
+CodeWidget — Third-Party Notices
+=================================
+
+This software includes the following third-party components.
+
+-------------------------------------------------------------------------------
+PySide6
+-------------------------------------------------------------------------------
+Copyright (C) The Qt Company Ltd.
+License: GNU Lesser General Public License v3 (LGPL-3.0)
+Source:  https://code.qt.io/cgit/pyside/pyside-setup.git/
+         https://download.qt.io/official_releases/QtForPython/
+
+The full text of the LGPL v3 is available at:
+  https://www.gnu.org/licenses/lgpl-3.0.html
+
+In accordance with LGPL v3 Section 4, users of the compiled binary may obtain
+the PySide6 source code at the URL above and rebuild the application against a
+modified version of PySide6. The source code of CodeWidget itself is available
+at: https://github.com/sxwins/CodeWidget
+
+-------------------------------------------------------------------------------
+Python Standard Library
+-------------------------------------------------------------------------------
+Copyright (C) 2001-2026 Python Software Foundation
+License: Python Software Foundation License Version 2 (PSF-2.0)
+         https://docs.python.org/3/license.html
+
+-------------------------------------------------------------------------------

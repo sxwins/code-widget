@@ -36,6 +36,7 @@ class TrayIcon(QSystemTrayIcon):
         action_quit = menu.addAction("終了")
         action_quit.triggered.connect(lambda: QApplication.instance().quit())
 
+        menu.aboutToShow.connect(self._update_toggle_text)
         self.setContextMenu(menu)
 
         # --- Initial tooltip ---
@@ -56,14 +57,17 @@ class TrayIcon(QSystemTrayIcon):
     # Public API
     # ------------------------------------------------------------------
 
+    def _update_toggle_text(self) -> None:
+        """Sync toggle-action label with the current window visibility."""
+        if self._attendance_window.isVisible():
+            self._action_toggle.setText("ウィンドウを隠す")
+        else:
+            self._action_toggle.setText("ウィンドウを表示")
+
     def update_status(self, sc: ScheduledClass | None) -> None:
-        """Update tooltip and toggle-action label based on current class."""
+        """Update tooltip based on current class."""
         if sc is None:
             self.setToolTip("CodeWidget — No active class")
-            self._action_toggle.setText("ウィンドウを表示")
         else:
             self.setToolTip(f"CodeWidget — {sc.course_name}  第{sc.session_key}回")
-            if self._attendance_window.isVisible():
-                self._action_toggle.setText("ウィンドウを隠す")
-            else:
-                self._action_toggle.setText("ウィンドウを表示")
+        self._update_toggle_text()

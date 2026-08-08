@@ -1,0 +1,239 @@
+{
+  "teacher_name": "田中",
+  "academic_year": "2026",
+  "courses": [
+    {
+      "id": "DEMO_SP1",
+      "name": "田中ゼミA",
+      "course_code": "EEE1000412",
+      "course_type": "spring",
+      "slots": [
+        {
+          "weekday": "Monday",
+          "period": 2
+        }
+      ]
+    },
+    {
+      "id": "DEMO_SP2",
+      "name": "線形代数学",
+      "course_code": "MA010001",
+      "course_type": "spring",
+      "slots": [
+        {
+          "weekday": "Wednesday",
+          "period": 3
+        }
+      ]
+    },
+    {
+      "id": "DEMO_AU1",
+      "name": "田中ゼミB",
+      "course_code": "EEE1000512",
+      "course_type": "autumn",
+      "slots": [
+        {
+          "weekday": "Monday",
+          "period": 2
+        }
+      ]
+    },
+    {
+      "id": "DEMO_AU2",
+      "name": "統計学入門",
+      "course_code": "MA020002",
+      "course_type": "autumn",
+      "slots": [
+        {
+          "weekday": "Friday",
+          "period": 4
+        }
+      ]
+    },
+    {
+      "id": "DEMO_Q1",
+      "name": "Webプログラミング",
+      "course_code": "CS010011",
+      "course_type": "Q1",
+      "slots": [
+        {
+          "weekday": "Tuesday",
+          "period": 3
+        },
+        {
+          "weekday": "Thursday",
+          "period": 4
+        }
+      ]
+    },
+    {
+      "id": "DEMO_Q2",
+      "name": "データベース基礎",
+      "course_code": "CS020021",
+      "course_type": "Q2",
+      "slots": [
+        {
+          "weekday": "Wednesday",
+          "period": 2
+        }
+      ]
+    },
+    {
+      "id": "DEMO_Q3",
+      "name": "ネットワーク概論",
+      "course_code": "CS030031",
+      "course_type": "Q3",
+      "slots": [
+        {
+          "weekday": "Monday",
+          "period": 4
+        }
+      ]
+    },
+    {
+      "id": "DEMO_Q4",
+      "name": "セキュリティ入門",
+      "course_code": "CS040041",
+      "course_type": "Q4",
+      "slots": [
+        {
+          "weekday": "Tuesday",
+          "period": 2
+        },
+        {
+          "weekday": "Friday",
+          "period": 3
+        }
+      ]
+    }
+  ],
+  "overrides": [
+    {
+      "type": "skip",
+      "course_id": "DEMO_SP1",
+      "date": "2026-05-11"
+    },
+    {
+      "type": "makeup",
+      "course_id": "DEMO_SP1",
+      "date": "2026-08-03",
+      "period": 2
+    },
+    {
+      "type": "reschedule",
+      "course_id": "DEMO_Q1",
+      "original_date": "2026-04-21",
+      "original_period": 3,
+      "new_date": "2026-04-23",
+      "new_period": 2
+    }
+  ],
+  "attendance_codes": {
+    "DEMO_SP1_01": "1951",
+    "DEMO_SP1_02": "5234",
+    "DEMO_SP1_03": "8233",
+    "DEMO_SP1_04": "8385",
+    "DEMO_SP1_05": "1681",
+    "DEMO_SP1_06": "3658",
+    "DEMO_SP1_07": "9847",
+    "DEMO_SP1_08": "9118",
+    "DEMO_SP1_09": "6891",
+    "DEMO_SP1_10": "9380",
+    "DEMO_SP1_11": "8975",
+    "DEMO_SP1_12": "8042",
+    "DEMO_SP1_13": "9609",
+    "DEMO_SP1_14": "7226",
+    "DEMO_SP2_01": "3931",
+    "DEMO_SP2_02": "0041",
+    "DEMO_SP2_03": "1322",
+    "DEMO_SP2_04": "1814",
+    "DEMO_SP2_05": "4706",
+    "DEMO_SP2_06": "1606",
+    "DEMO_SP2_07": "7367",
+    "DEMO_SP2_08": "0188",
+    "DEMO_SP2_09": "8032",
+    "DEMO_SP2_10": "5148",
+    "DEMO_SP2_11": "3444",
+    "DEMO_SP2_12": "6508",
+    "DEMO_SP2_13": "4120",
+    "DEMO_SP2_14": "5696",
+    "DEMO_AU1_01": "5843",
+    "DEMO_AU1_02": "6166",
+    "DEMO_AU1_03": "8414",
+    "DEMO_AU1_04": "1250",
+    "DEMO_AU1_05": "5577",
+    "DEMO_AU1_06": "1469",
+    "DEMO_AU1_07": "9133",
+    "DEMO_AU1_08": "8815",
+    "DEMO_AU1_09": "4786",
+    "DEMO_AU1_10": "4712",
+    "DEMO_AU1_11": "7494",
+    "DEMO_AU1_12": "2308",
+    "DEMO_AU1_13": "9460",
+    "DEMO_AU1_14": "5062",
+    "DEMO_AU2_01": "0405",
+    "DEMO_AU2_02": "6043",
+    "DEMO_AU2_03": "5956",
+    "DEMO_AU2_04": "7554",
+    "DEMO_AU2_05": "6917",
+    "DEMO_AU2_06": "1485",
+    "DEMO_AU2_07": "6533",
+    "DEMO_AU2_08": "9596",
+    "DEMO_AU2_09": "9084",
+    "DEMO_AU2_10": "8166",
+    "DEMO_AU2_11": "1907",
+    "DEMO_AU2_12": "6970",
+    "DEMO_AU2_13": "8296",
+    "DEMO_AU2_14": "9833",
+    "DEMO_Q1_01": "8045",
+    "DEMO_Q1_02": "6523",
+    "DEMO_Q1_03": "8595",
+    "DEMO_Q1_04": "4237",
+    "DEMO_Q1_05": "6880",
+    "DEMO_Q1_06": "9240",
+    "DEMO_Q1_07": "7851",
+    "DEMO_Q1_08": "8404",
+    "DEMO_Q1_09": "8486",
+    "DEMO_Q1_10": "0415",
+    "DEMO_Q1_11": "9429",
+    "DEMO_Q1_12": "3678",
+    "DEMO_Q1_13": "2113",
+    "DEMO_Q1_14": "0800",
+    "DEMO_Q2_01": "8572",
+    "DEMO_Q2_02": "1680",
+    "DEMO_Q2_03": "7035",
+    "DEMO_Q2_04": "7701",
+    "DEMO_Q2_05": "2333",
+    "DEMO_Q2_06": "7898",
+    "DEMO_Q2_07": "3750",
+    "DEMO_Q3_01": "1999",
+    "DEMO_Q3_02": "7484",
+    "DEMO_Q3_03": "7690",
+    "DEMO_Q3_04": "8939",
+    "DEMO_Q3_05": "4112",
+    "DEMO_Q3_06": "9171",
+    "DEMO_Q3_07": "6587",
+    "DEMO_Q4_01": "5040",
+    "DEMO_Q4_02": "8980",
+    "DEMO_Q4_03": "8223",
+    "DEMO_Q4_04": "7846",
+    "DEMO_Q4_05": "6585",
+    "DEMO_Q4_06": "7095",
+    "DEMO_Q4_07": "3318",
+    "DEMO_Q4_08": "4823",
+    "DEMO_Q4_09": "4407",
+    "DEMO_Q4_10": "0151",
+    "DEMO_Q4_11": "0542",
+    "DEMO_Q4_12": "2455",
+    "DEMO_Q4_13": "9785",
+    "DEMO_Q4_14": "7507"
+  },
+  "window_position": {
+    "x": 100,
+    "y": 100
+  },
+  "settings": {
+    "pre_class_minutes": 10,
+    "post_class_minutes": 30
+  }
+}

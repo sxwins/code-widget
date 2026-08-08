@@ -47,8 +47,8 @@ from models.teacher_config import (
     save_teacher_config,
 )
 
-APP_VERSION = "1.0.0"
-APP_RELEASE_DATE = "2026-03-02"
+APP_VERSION = "1.1.0"
+APP_RELEASE_DATE = "2026-08-08"
 APP_AUTHOR = "Xiaowei SHAO"
 
 WEEKDAY_JP = {

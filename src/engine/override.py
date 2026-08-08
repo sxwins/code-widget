@@ -37,7 +37,10 @@ def apply_overrides(
 
 def _apply_skip(scheduled: list[ScheduledClass], ov: Override) -> list[ScheduledClass]:
     """Remove all sessions of the course that fall on the override date."""
-    skip_date = date.fromisoformat(ov.date)
+    try:
+        skip_date = date.fromisoformat(ov.date)
+    except ValueError:
+        return scheduled
     return [
         sc for sc in scheduled
         if not (sc.course_id == ov.course_id and sc.date == skip_date)
@@ -49,7 +52,10 @@ def _apply_makeup(scheduled: list[ScheduledClass], ov: Override) -> list[Schedul
     ref = next((sc for sc in scheduled if sc.course_id == ov.course_id), None)
     if ref is None:
         return scheduled
-    new_date = date.fromisoformat(ov.date)
+    try:
+        new_date = date.fromisoformat(ov.date)
+    except ValueError:
+        return scheduled
     new_sc = ScheduledClass(
         course_id=ref.course_id,
         course_name=ref.course_name,
@@ -64,7 +70,10 @@ def _apply_makeup(scheduled: list[ScheduledClass], ov: Override) -> list[Schedul
 
 def _apply_reschedule(scheduled: list[ScheduledClass], ov: Override) -> list[ScheduledClass]:
     """Remove the original session and insert a replacement at the new date/period."""
-    orig_date = date.fromisoformat(ov.original_date)
+    try:
+        orig_date = date.fromisoformat(ov.original_date)
+    except ValueError:
+        return scheduled
     result = [
         sc for sc in scheduled
         if not (
@@ -75,7 +84,10 @@ def _apply_reschedule(scheduled: list[ScheduledClass], ov: Override) -> list[Sch
     ]
     ref = next((sc for sc in result if sc.course_id == ov.course_id), None)
     if ref is not None and ov.new_date:
-        new_date = date.fromisoformat(ov.new_date)
+        try:
+            new_date = date.fromisoformat(ov.new_date)
+        except ValueError:
+            return result
         if ov.new_start_time:
             new_period = 0
             custom_start = ov.new_start_time

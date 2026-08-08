@@ -121,14 +121,12 @@ def main():
     try:
         school_config = load_school_config(SCHOOL_CONFIG_PATH)
         teacher_config = load_teacher_config(teacher_path)
-    except (FileNotFoundError, json.JSONDecodeError, KeyError) as exc:
+        all_scheduled = _build_all_scheduled(teacher_config, school_config)
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, ValueError) as exc:
         from PySide6.QtWidgets import QMessageBox
         QMessageBox.critical(None, "設定ファイルエラー",
                              f"設定ファイルの読み込みに失敗しました。\n\n{exc}")
         sys.exit(1)
-
-    # Build schedule
-    all_scheduled = _build_all_scheduled(teacher_config, school_config)
     _last_active = [None]  # mutable list used as closure cell
 
     # Temporary codes: key -> (code, expiry_datetime); in-memory only, not persisted
@@ -175,7 +173,10 @@ def main():
 
     def on_config_saved():
         nonlocal all_scheduled
-        all_scheduled = _build_all_scheduled(teacher_config, school_config)
+        try:
+            all_scheduled = _build_all_scheduled(teacher_config, school_config)
+        except Exception:
+            pass  # keep existing schedule; UI refresh still proceeds below
         win.apply_appearance(app_settings.appearance)
         _last_active[0] = None  # force _tick() to re-evaluate and push new code to window
         _tick()

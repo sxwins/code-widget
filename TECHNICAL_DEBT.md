@@ -103,7 +103,7 @@ result.sort(key=lambda sc: (sc.date, sc.period, sc.custom_start))
 
 ---
 
-## [TD-03] 编辑 skip/makeup 调整时，保存后类型被错误改写为 reschedule【高】
+## [TD-03] 编辑 skip/makeup 调整时，保存后类型被错误改写为 reschedule【已修复 2026-08-08】
 
 **文件**：`src/gui/config_dialog.py`
 
@@ -139,7 +139,7 @@ self.result_override = Override(type="reschedule", ...)
 
 ---
 
-## [TD-04] 日期/时间解析无异常保护，配置格式错误时应用直接崩溃【高】
+## [TD-04] 日期/时间解析无异常保护，配置格式错误时应用直接崩溃【已修复 2026-08-08】
 
 **文件**：`src/engine/override.py`、`src/engine/scheduler.py`、`src/main.py`
 
@@ -254,7 +254,7 @@ QTimer.singleShot(0, _tick)   # ← 首次 tick，决定是否隐藏
 
 ---
 
-## [TD-07] 在设置对话框中修改出席码并保存后，主窗口不刷新显示新出席码【高】
+## [TD-07] 在设置对话框中修改出席码并保存后，主窗口不刷新显示新出席码【已修复 2026-08-08】
 
 **文件**：`src/gui/config_dialog.py`、`src/main.py`
 

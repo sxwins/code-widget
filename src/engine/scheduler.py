@@ -91,7 +91,13 @@ def compute_window(
 ) -> tuple[datetime, datetime]:
     """Return (window_start, window_end) for a ScheduledClass."""
     if sc.custom_start:
-        h, m = map(int, sc.custom_start.split(":"))
+        try:
+            h, m = map(int, sc.custom_start.split(":"))
+        except (ValueError, AttributeError):
+            raise ValueError(
+                f"Invalid custom_start format {sc.custom_start!r} for course {sc.course_id!r}. "
+                "Expected HH:MM (e.g. \"09:00\")."
+            )
     else:
         period_info = school_config.periods[str(sc.period)]
         h, m = map(int, period_info.start.split(":"))

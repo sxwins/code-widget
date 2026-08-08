@@ -1081,6 +1081,15 @@ class ConfigDialog(QDialog):
         if row < 0 or row >= len(self.teacher_config.overrides):
             return
         ov = self.teacher_config.overrides[row]
+        if ov.type != "reschedule":
+            type_label = {"skip": "休講", "makeup": "補講"}.get(ov.type, ov.type)
+            QMessageBox.information(
+                self,
+                "編集不可",
+                f"「{type_label}」タイプの調整はダイアログでの編集に対応していません。\n"
+                "削除してから再追加してください。",
+            )
+            return
         dlg = RescheduleDialog(self.school_config, self.teacher_config, existing_override=ov, parent=self)
         if dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_override is not None:
             self.teacher_config.overrides[row] = dlg.result_override

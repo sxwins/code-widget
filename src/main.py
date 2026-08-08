@@ -127,7 +127,8 @@ def main():
         QMessageBox.critical(None, "設定ファイルエラー",
                              f"設定ファイルの読み込みに失敗しました。\n\n{exc}")
         sys.exit(1)
-    _last_active = [None]  # mutable list used as closure cell
+    _UNSET = object()
+    _last_active = [_UNSET]  # sentinel forces first _tick() to always run the full update path
 
     # Temporary codes: key -> (code, expiry_datetime); in-memory only, not persisted
     _temp_codes: dict = {}
@@ -144,9 +145,8 @@ def main():
         if not any(s.geometry().intersects(win_rect) for s in app.screens()):
             win.move(app.primaryScreen().geometry().topLeft())
 
-    # Apply saved appearance and show window on startup
+    # Apply saved appearance; visibility is determined by _tick() on first call
     win.apply_appearance(app_settings.appearance)
-    win.show()
 
     # Save position when dragged
     def on_position_changed(x: int, y: int):

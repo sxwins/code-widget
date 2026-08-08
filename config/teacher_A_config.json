@@ -1,0 +1,38 @@
+{
+  "teacher_name": "Teacher A",
+  "academic_year": "2026",
+  "courses": [
+    {
+      "id": "EEE1000411",
+      "name": "初年次セミナーA",
+      "course_type": "spring",
+      "slots": [
+        {"weekday": "Thursday", "period": 1}
+      ]
+    },
+    {
+      "id": "RD01000503",
+      "name": "データ分析入門",
+      "course_type": "autumn",
+      "slots": [
+        {"weekday": "Monday", "period": 3}
+      ]
+    },
+    {
+      "id": "RD010001E3",
+      "name": "情報リテラシーA",
+      "course_type": "Q1",
+      "slots": [
+        {"weekday": "Wednesday", "period": 2},
+        {"weekday": "Friday", "period": 3}
+      ]
+    }
+  ],
+  "overrides": [],
+  "attendance_codes": {},
+  "window_position": {"x": 100, "y": 100},
+  "settings": {
+    "pre_class_minutes": 10,
+    "post_class_minutes": 30
+  }
+}

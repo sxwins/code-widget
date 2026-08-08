@@ -128,6 +128,7 @@ def main():
                              f"設定ファイルの読み込みに失敗しました。\n\n{exc}")
         sys.exit(1)
     _last_active = [None]  # mutable list used as closure cell
+    _last_code = [""]      # last code pushed to the window; detects temp-code expiry
 
     # Temporary codes: key -> (code, expiry_datetime); in-memory only, not persisted
     _temp_codes: dict = {}
@@ -255,11 +256,20 @@ def main():
         if active != _last_active[0]:
             _last_active[0] = active
             if active is not None:
-                win.update_class(active, _code_for(active))
+                code = _code_for(active)
+                _last_code[0] = code
+                win.update_class(active, code)
                 win.show()
             else:
+                _last_code[0] = ""
                 win.hide()
             tray.update_status(active)
+        elif active is not None:
+            # Same active class — check if the displayed code changed (e.g. temp code expired)
+            code = _code_for(active)
+            if code != _last_code[0]:
+                _last_code[0] = code
+                win.update_class(active, code)
 
     timer = QTimer()
     timer.timeout.connect(_tick)

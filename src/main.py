@@ -185,7 +185,14 @@ def main():
         except Exception:
             pass  # keep existing schedule; UI refresh still proceeds below
         win.apply_appearance(app_settings.appearance)
-        _last_active[0] = None  # force _tick() to re-evaluate and push new code to window
+        # If a session is currently displayed, push the updated code immediately using
+        # the existing _last_active reference (avoids any session_key re-ordering mismatch
+        # that could occur after rebuilding all_scheduled for custom_start sessions).
+        if _last_active[0] is not None:
+            code = _code_for(_last_active[0])
+            _last_code[0] = code
+            win.update_class(_last_active[0], code)
+        _last_active[0] = None  # then force full _tick() re-evaluation
         _tick()
 
     def on_config_file_loaded(new_path: str) -> None:

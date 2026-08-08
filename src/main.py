@@ -138,11 +138,14 @@ def main():
     tray = TrayIcon(attendance_window=win)
     tray.show()
 
-    # Restore saved window position; fall back to primary screen top-left if off-screen
+    # Restore saved window position; fall back to primary screen top-left if less than
+    # 50 px of the window's width is visible on any screen (e.g. after monitor disconnect).
+    _MIN_VISIBLE_PX = 50
     if teacher_config.window_position:
         win.move(teacher_config.window_position.x, teacher_config.window_position.y)
         win_rect = win.frameGeometry()
-        if not any(s.geometry().intersects(win_rect) for s in app.screens()):
+        visible = max((s.geometry().intersected(win_rect).width() for s in app.screens()), default=0)
+        if visible < _MIN_VISIBLE_PX:
             win.move(app.primaryScreen().geometry().topLeft())
 
     # Apply saved appearance and show window on startup

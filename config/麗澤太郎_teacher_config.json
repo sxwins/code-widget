@@ -1,10 +1,10 @@
 {
-  "teacher_name": "田中",
+  "teacher_name": "麗澤太郎",
   "academic_year": "2026",
   "courses": [
     {
       "id": "DEMO_SP1",
-      "name": "田中ゼミA",
+      "name": "初年次ゼミA",
       "course_code": "EEE1000412",
       "course_type": "spring",
       "slots": [
@@ -28,7 +28,7 @@
     },
     {
       "id": "DEMO_AU1",
-      "name": "田中ゼミB",
+      "name": "初年次ゼミB",
       "course_code": "EEE1000512",
       "course_type": "autumn",
       "slots": [

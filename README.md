@@ -53,11 +53,37 @@ All files are plain JSON and can be edited by hand or replaced each academic yea
 
 ## Building from Source
 
+### Windows EXE
+
+本项目开发环境为 Docker（Linux），与宿主机 Windows 共享工作目录。
+为避免覆盖 Docker 中的 `.venv`，打包时使用独立的 `.venv-win` 环境。
+
+在 Windows PowerShell 中，于项目目录下执行：
+
+```powershell
+$env:UV_PROJECT_ENVIRONMENT = ".venv-win"
+uv sync --dev
+uv run pyinstaller CodeWidget.spec --clean
+# 输出：dist/CodeWidget.exe
+```
+
+> `$env:UV_PROJECT_ENVIRONMENT` 仅对当前 PowerShell 会话有效，不影响其他项目或 Docker 环境。
+
+### macOS App Bundle
+
+在 Mac 上执行（需要 Xcode Command Line Tools）：
+
 ```bash
 # Prerequisites: Python 3.12, uv
-uv sync
-uv run pytest          # run tests
-uv run pyinstaller CodeWidget.spec --clean   # build EXE → dist/CodeWidget.exe
+uv sync --dev
+./build_macos.sh
+# 输出：dist/CodeWidget.app
+```
+
+### 运行测试
+
+```bash
+uv run pytest -v
 ```
 
 ## License

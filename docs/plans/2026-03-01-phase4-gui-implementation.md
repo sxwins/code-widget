@@ -416,7 +416,7 @@ import pytest
 from pathlib import Path
 
 SCHOOL  = Path(__file__).parent.parent / "config" / "school_config.json"
-TEACHER = Path(__file__).parent.parent / "config" / "邵_teacher_config.json"
+TEACHER = Path(__file__).parent.parent / "config" / "teacher_A_config.json"
 
 
 @pytest.fixture(scope="module")
@@ -442,7 +442,7 @@ def test_courses_tab_row_count(qtbot, school, teacher):
     from gui.config_dialog import ConfigDialog
     dlg = ConfigDialog(school_config=school, teacher_config=teacher)
     qtbot.addWidget(dlg)
-    # 邵_teacher_config has 14 non-intensive courses
+    # teacher_A_config has 14 non-intensive courses
     assert dlg.courses_table.rowCount() == 14
 
 
@@ -949,7 +949,7 @@ from gui.config_dialog import ConfigDialog
 from utils.time_utils import now
 
 SCHOOL_CONFIG_PATH = Path(__file__).parent.parent / "config" / "school_config.json"
-DEFAULT_TEACHER_CONFIG = Path(__file__).parent.parent / "config" / "邵_teacher_config.json"
+DEFAULT_TEACHER_CONFIG = Path(__file__).parent.parent / "config" / "teacher_A_config.json"
 TICK_MS = 30_000  # 30 seconds
 
 

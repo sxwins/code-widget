@@ -10,7 +10,7 @@ from engine.scheduler import resolve_course_schedule
 from engine.override import apply_overrides
 
 SCHOOL  = Path(__file__).parent.parent / "config" / "school_config.json"
-TEACHER = Path(__file__).parent.parent / "config" / "邵_teacher_config.json"
+TEACHER = Path(__file__).parent.parent / "config" / "teacher_A_config.json"
 
 
 @pytest.fixture(scope="module")

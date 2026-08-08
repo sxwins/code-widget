@@ -50,7 +50,7 @@
 |-----------|-------|---------|------------|
 | — | （暂无） | — | — |
 
-  - 从 docs/邵_教員時間割表.pdf 提取邵先生全课程（春6门+秋8门），生成 config/邵_teacher_config.json
+  - 从 docs/teacher_A_schedule.pdf 提取担当教員全课程（春6门+秋8门），生成 config/teacher_A_config.json
   - 确认并文档化完整业务逻辑数据流（findings.md "業務ロジック"）
   - Phase 2 标记为 complete，Phase 3 开始
 

@@ -20,7 +20,7 @@ Phase 7: 打包与发布（最终）
 - [x] 设计数据模型（JSON 配置格式：school_config + teacher_config）
 - [x] 定义6种课程类型（spring/autumn/Q1〜Q4）及其 session_keys 映射规则
 - [x] 确认完整业务逻辑数据流（见 findings.md "業務ロジック"）
-- [x] 填充实际配置数据（6限时间表、春秋两学期14回授课日、邵先生课程配置）
+- [x] 填充实际配置数据（6限时间表、春秋两学期14回授课日、担当教員课程配置）
 - [x] 记录所有决策到 findings.md
 - **Status:** complete
 

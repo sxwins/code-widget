@@ -9,7 +9,7 @@ from models.teacher_config import load_teacher_config, Settings
 from engine.scheduler import resolve_course_schedule, compute_window, get_active_class
 
 SCHOOL  = Path(__file__).parent.parent / "config" / "school_config.json"
-TEACHER = Path(__file__).parent.parent / "config" / "邵_teacher_config.json"
+TEACHER = Path(__file__).parent.parent / "config" / "teacher_A_config.json"
 
 
 @pytest.fixture(scope="module")

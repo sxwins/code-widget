@@ -36,7 +36,7 @@ When teacher saves config (overrides, courses), `main.py` rebuilds `all_schedule
 ### 1. `src/main.py` — Entry Point
 
 - Load `config/school_config.json`
-- Load teacher config (path stored in `QSettings` key `"teacher_config_path"`; default `config/邵_teacher_config.json`)
+- Load teacher config (path stored in `QSettings` key `"teacher_config_path"`; default `config/teacher_A_config.json`)
 - Build `all_scheduled`:
   ```python
   all_scheduled = []

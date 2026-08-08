@@ -1,6 +1,6 @@
 """teacher_config.py — data models and JSON serialisation for teacher-specific configuration.
 
-File layout (邵_teacher_config.json):
+File layout (teacher_config.json):
   teacher_name, academic_year, courses[], overrides[], attendance_codes{},
   appearance{}, window_position{}, settings{}
 

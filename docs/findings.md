@@ -306,7 +306,7 @@ CodeWidget/
 ├── config/
 │   ├── school_config.json      # 全校通用配置（含实际6限时间 + 春秋两学期授课日）
 │   ├── teacher_config.json     # 教师个人配置模板
-│   └── 邵_teacher_config.json  # 邵先生実際設定（2026年度）
+│   └── teacher_A_config.json  # 担当教員実際設定（2026年度）
 ├── tests/                   # 单元测试
 ├── requirements.txt         # Python 依赖
 └── build/                   # PyInstaller 输出（gitignored）

@@ -107,27 +107,7 @@
       ]
     }
   ],
-  "overrides": [
-    {
-      "type": "skip",
-      "course_id": "DEMO_SP1",
-      "date": "2026-05-11"
-    },
-    {
-      "type": "makeup",
-      "course_id": "DEMO_SP1",
-      "date": "2026-08-03",
-      "period": 2
-    },
-    {
-      "type": "reschedule",
-      "course_id": "DEMO_Q1",
-      "original_date": "2026-04-21",
-      "original_period": 3,
-      "new_date": "2026-04-23",
-      "new_period": 2
-    }
-  ],
+  "overrides": [],
   "attendance_codes": {
     "DEMO_SP1_01": "1951",
     "DEMO_SP1_02": "5234",

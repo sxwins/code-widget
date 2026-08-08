@@ -17,7 +17,7 @@ The full text of the LGPL v3 is available at:
 In accordance with LGPL v3 Section 4, users of the compiled binary may obtain
 the PySide6 source code at the URL above and rebuild the application against a
 modified version of PySide6. The source code of CodeWidget itself is available
-at: https://github.com/sxwins/CodeWidget
+at: https://github.com/sxwins/code-widget
 
 -------------------------------------------------------------------------------
 Python Standard Library

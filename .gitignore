@@ -17,7 +17,11 @@ ENV/
 
 # PyInstaller 输出
 build/
-*.spec
+
+# 临时 / 备份文件
+*.zip
+*.pptx
+~$*
 
 # IDE
 .vscode/

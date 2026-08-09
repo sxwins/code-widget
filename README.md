@@ -2,7 +2,8 @@
 
 **[English]** | [日本語](docs/README_ja.md)
 
-A desktop attendance-code display tool for university teachers.
+A lightweight desktop tool for university teachers who use an LMS such as UNIPA
+to manage class attendance codes — no manual operation needed during the lesson.
 
 ## Overview
 

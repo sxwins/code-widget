@@ -39,10 +39,10 @@ CodeWidget は授業時間中にデスクトップへフローティングウィ
 
 **macOS**
 
-1. [Releases](../../releases) から `CodeWidget.dmg` をダウンロード
-2. `.dmg` を開き、**CodeWidget.app** を Applications フォルダへドラッグ
-3. アプリを起動 — 初回起動時に `~/Library/Application Support/CodeWidget/` 内に `config/` フォルダが自動作成されます
-4. 設定ダイアログ（トレイアイコン → **設定**）を開いてコースを登録
+1. [Releases](../../releases) から `CodeWidget.app.zip` をダウンロードして解凍
+2. **CodeWidget.app** を Applications フォルダへドラッグ
+3. 初回起動時は右クリック → **開く** で Gatekeeper の警告を回避
+4. 設定ダイアログ（メニューバーアイコン → **設定**）を開いてコースを登録
 
 ## 設定ファイル
 
@@ -73,7 +73,7 @@ uv run pyinstaller CodeWidget.spec --clean
 > `$env:UV_PROJECT_ENVIRONMENT` は現在の PowerShell セッションのみ有効で、
 > 他のプロジェクトや Docker 環境には影響しません。
 
-### macOS DMG
+### macOS アプリバンドル
 
 Mac 上で実行してください（Xcode Command Line Tools が必要です）：
 
@@ -82,7 +82,7 @@ Mac 上で実行してください（Xcode Command Line Tools が必要です）
 uv sync --dev
 uv run pyinstaller CodeWidget.spec --clean
 # 出力：dist/CodeWidget.app
-# DMG 化には任意のツール（例：create-dmg）を使用してください
+# 配布用に圧縮：zip -r CodeWidget.app.zip dist/CodeWidget.app
 ```
 
 ### テストの実行

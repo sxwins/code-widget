@@ -47,11 +47,10 @@ disappears after class ends — no manual operation required during the lesson.
 
 **macOS**
 
-1. Download `CodeWidget.dmg` from [Releases](../../releases)
-2. Open the `.dmg` and drag **CodeWidget.app** to your Applications folder
-3. Launch the app — a `config/` subdirectory is created in
-   `~/Library/Application Support/CodeWidget/` on first run
-4. Open the settings dialog (tray icon → **Settings**) and configure your courses
+1. Download `CodeWidget.app.zip` from [Releases](../../releases) and unzip it
+2. Drag **CodeWidget.app** to your Applications folder
+3. Right-click → **Open** on first launch to bypass Gatekeeper
+4. Open the settings dialog (menu bar icon → **Settings**) and configure your courses
 
 ## Configuration Files
 
@@ -83,7 +82,7 @@ uv run pyinstaller CodeWidget.spec --clean
 > `$env:UV_PROJECT_ENVIRONMENT` is session-scoped and does not affect other
 > projects or the Docker environment.
 
-### macOS DMG
+### macOS App Bundle
 
 Run on a Mac (Xcode Command Line Tools required):
 
@@ -92,7 +91,7 @@ Run on a Mac (Xcode Command Line Tools required):
 uv sync --dev
 uv run pyinstaller CodeWidget.spec --clean
 # Output: dist/CodeWidget.app
-# Package into DMG with your preferred tool (e.g. create-dmg)
+# Compress for distribution: zip -r CodeWidget.app.zip dist/CodeWidget.app
 ```
 
 ### Running Tests

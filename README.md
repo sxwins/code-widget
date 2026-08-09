@@ -1,5 +1,7 @@
 # CodeWidget
 
+**[English]** | [日本語](README_ja.md)
+
 A desktop attendance-code display tool for university teachers.
 
 ## Overview
@@ -16,7 +18,7 @@ disappears after class ends — no manual operation required during the lesson.
 ## Features
 
 - **Automatic schedule tracking** — reads your course timetable and shows the
-  correct code at the right time, including makeup/rescheduled sessions
+  correct code at the right time, including makeup and rescheduled sessions
 - **Per-session codes** — each class meeting has its own pre-assigned code;
   codes can be edited or bulk-generated at any time
 - **Floating overlay** — compact, always-on-top window; position is remembered
@@ -30,7 +32,7 @@ disappears after class ends — no manual operation required during the lesson.
 
 ## Requirements
 
-- Windows 10 / 11
+- Windows 10 / 11  
   *(macOS is supported when built from source on a Mac)*
 - No installer needed — single `.exe` file
 
@@ -39,7 +41,7 @@ disappears after class ends — no manual operation required during the lesson.
 1. Download `CodeWidget.exe` from [Releases](../../releases)
 2. Place it in any folder — a `config/` subdirectory is created automatically
    on first launch
-3. Open the settings dialog (tray icon → **設定**) and configure your courses
+3. Open the settings dialog (tray icon → **Settings**) and configure your courses
 
 ## Configuration Files
 
@@ -55,32 +57,34 @@ All files are plain JSON and can be edited by hand or replaced each academic yea
 
 ### Windows EXE
 
-本项目开发环境为 Docker（Linux），与宿主机 Windows 共享工作目录。
-为避免覆盖 Docker 中的 `.venv`，打包时使用独立的 `.venv-win` 环境。
+This project's development environment is Docker (Linux) sharing the working
+directory with the host Windows machine. A separate `.venv-win` virtual
+environment is used for bundling to avoid overwriting the Docker `.venv`.
 
-在 Windows PowerShell 中，于项目目录下执行：
+Run the following in Windows PowerShell from the project directory:
 
 ```powershell
 $env:UV_PROJECT_ENVIRONMENT = ".venv-win"
 uv sync --dev
 uv run pyinstaller CodeWidget.spec --clean
-# 输出：dist/CodeWidget.exe
+# Output: dist/CodeWidget.exe
 ```
 
-> `$env:UV_PROJECT_ENVIRONMENT` 仅对当前 PowerShell 会话有效，不影响其他项目或 Docker 环境。
+> `$env:UV_PROJECT_ENVIRONMENT` is session-scoped and does not affect other
+> projects or the Docker environment.
 
 ### macOS App Bundle
 
-在 Mac 上执行（需要 Xcode Command Line Tools）：
+Run on a Mac (Xcode Command Line Tools required):
 
 ```bash
 # Prerequisites: Python 3.12, uv
 uv sync --dev
-./build_macos.sh
-# 输出：dist/CodeWidget.app
+uv run pyinstaller CodeWidget.spec --clean
+# Output: dist/CodeWidget.app
 ```
 
-### 运行测试
+### Running Tests
 
 ```bash
 uv run pytest -v
@@ -92,3 +96,4 @@ uv run pytest -v
 
 > This software uses [PySide6](https://doc.qt.io/qtforpython/), licensed under
 > [LGPL v3](https://www.gnu.org/licenses/lgpl-3.0.html).
+> See [NOTICE](NOTICE) for full attribution.

@@ -49,8 +49,9 @@ disappears after class ends — no manual operation required during the lesson.
 
 1. Download `CodeWidget-v1.1-mac-arm64.zip` from [Releases](../../releases)
 2. Unzip — you will find **CodeWidget.app** inside
-3. Double-click **CodeWidget.app** to run it  
-   *(First launch only: right-click → **Open** to bypass the Gatekeeper warning)*
+3. **First launch only** — macOS flags apps downloaded from the internet (Gatekeeper).
+   Right-click **CodeWidget.app** → **Open** → click **Open** in the dialog.
+   After this, the app opens normally with a double-click.
 4. Optionally drag **CodeWidget.app** to your Applications folder so it appears in Launchpad
 5. Open the settings dialog (menu bar icon → **Settings**) and configure your courses
 

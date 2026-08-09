@@ -41,8 +41,9 @@ CodeWidget は授業時間中にデスクトップへフローティングウィ
 
 1. [Releases](../../releases) から `CodeWidget-v1.1-mac-arm64.zip` をダウンロード
 2. 解凍すると **CodeWidget.app** が取り出せます
-3. **CodeWidget.app** をダブルクリックして起動  
-   *(初回のみ：右クリック → **開く** で Gatekeeper の警告を回避)*
+3. **初回のみ** — インターネットからダウンロードしたアプリは Gatekeeper の対象になります。  
+   **CodeWidget.app** を右クリック → **開く** → ダイアログの **開く** をクリック。  
+   2回目以降はダブルクリックで起動できます。
 4. 必要に応じて **CodeWidget.app** を Applications フォルダへドラッグすると Launchpad からも起動できます
 5. 設定ダイアログ（メニューバーアイコン → **設定**）を開いてコースを登録
 

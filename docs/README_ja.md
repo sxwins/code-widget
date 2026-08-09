@@ -39,7 +39,7 @@ CodeWidget は授業時間中にデスクトップへフローティングウィ
 
 **macOS**
 
-1. [Releases](../../releases) から `CodeWidget-v1.1-mac-universal.zip` をダウンロード
+1. [Releases](../../releases) から `CodeWidget-v1.1-mac-arm64.zip` をダウンロード
 2. 解凍すると **CodeWidget.app** が取り出せます
 3. **CodeWidget.app** をダブルクリックして起動  
    *(初回のみ：右クリック → **開く** で Gatekeeper の警告を回避)*
@@ -85,7 +85,7 @@ uv sync --dev
 uv run pyinstaller CodeWidget.spec --clean
 # 出力：dist/CodeWidget.app
 # 配布用に圧縮：
-# cd dist && zip -r ../CodeWidget-v1.1-mac-universal.zip CodeWidget.app
+# cd dist && zip -r ../CodeWidget-v1.1-mac-arm64.zip CodeWidget.app
 ```
 
 ### テストの実行

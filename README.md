@@ -47,7 +47,7 @@ disappears after class ends — no manual operation required during the lesson.
 
 **macOS**
 
-1. Download `CodeWidget-v1.1-mac-universal.zip` from [Releases](../../releases)
+1. Download `CodeWidget-v1.1-mac-arm64.zip` from [Releases](../../releases)
 2. Unzip — you will find **CodeWidget.app** inside
 3. Double-click **CodeWidget.app** to run it  
    *(First launch only: right-click → **Open** to bypass the Gatekeeper warning)*
@@ -94,7 +94,7 @@ uv sync --dev
 uv run pyinstaller CodeWidget.spec --clean
 # Output: dist/CodeWidget.app
 # Compress for distribution:
-# cd dist && zip -r ../CodeWidget-v1.1-mac-universal.zip CodeWidget.app
+# cd dist && zip -r ../CodeWidget-v1.1-mac-arm64.zip CodeWidget.app
 ```
 
 ### Running Tests

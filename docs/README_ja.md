@@ -39,10 +39,12 @@ CodeWidget は授業時間中にデスクトップへフローティングウィ
 
 **macOS**
 
-1. [Releases](../../releases) から `CodeWidget.app.zip` をダウンロードして解凍
-2. **CodeWidget.app** を Applications フォルダへドラッグ
-3. 初回起動時は右クリック → **開く** で Gatekeeper の警告を回避
-4. 設定ダイアログ（メニューバーアイコン → **設定**）を開いてコースを登録
+1. [Releases](../../releases) から `CodeWidget-v1.1-mac-universal.zip` をダウンロード
+2. 解凍すると **CodeWidget.app** が取り出せます
+3. **CodeWidget.app** をダブルクリックして起動  
+   *(初回のみ：右クリック → **開く** で Gatekeeper の警告を回避)*
+4. 必要に応じて **CodeWidget.app** を Applications フォルダへドラッグすると Launchpad からも起動できます
+5. 設定ダイアログ（メニューバーアイコン → **設定**）を開いてコースを登録
 
 ## 設定ファイル
 
@@ -82,7 +84,8 @@ Mac 上で実行してください（Xcode Command Line Tools が必要です）
 uv sync --dev
 uv run pyinstaller CodeWidget.spec --clean
 # 出力：dist/CodeWidget.app
-# 配布用に圧縮：zip -r CodeWidget.app.zip dist/CodeWidget.app
+# 配布用に圧縮：
+# cd dist && zip -r ../CodeWidget-v1.1-mac-universal.zip CodeWidget.app
 ```
 
 ### テストの実行

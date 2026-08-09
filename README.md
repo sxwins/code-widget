@@ -47,10 +47,12 @@ disappears after class ends — no manual operation required during the lesson.
 
 **macOS**
 
-1. Download `CodeWidget.app.zip` from [Releases](../../releases) and unzip it
-2. Drag **CodeWidget.app** to your Applications folder
-3. Right-click → **Open** on first launch to bypass Gatekeeper
-4. Open the settings dialog (menu bar icon → **Settings**) and configure your courses
+1. Download `CodeWidget-v1.1-mac-universal.zip` from [Releases](../../releases)
+2. Unzip — you will find **CodeWidget.app** inside
+3. Double-click **CodeWidget.app** to run it  
+   *(First launch only: right-click → **Open** to bypass the Gatekeeper warning)*
+4. Optionally drag **CodeWidget.app** to your Applications folder so it appears in Launchpad
+5. Open the settings dialog (menu bar icon → **Settings**) and configure your courses
 
 ## Configuration Files
 
@@ -91,7 +93,8 @@ Run on a Mac (Xcode Command Line Tools required):
 uv sync --dev
 uv run pyinstaller CodeWidget.spec --clean
 # Output: dist/CodeWidget.app
-# Compress for distribution: zip -r CodeWidget.app.zip dist/CodeWidget.app
+# Compress for distribution:
+# cd dist && zip -r ../CodeWidget-v1.1-mac-universal.zip CodeWidget.app
 ```
 
 ### Running Tests

@@ -37,7 +37,8 @@ pyz = PYZ(a.pure)
 
 import sys as _sys
 
-_icon = str(ROOT / "src" / "assets" / ("icon.icns" if _sys.platform == "darwin" else "icon.ico"))
+_icns = ROOT / "src" / "assets" / "icon.icns"
+_icon = str(_icns if (_sys.platform == "darwin" and _icns.exists()) else ROOT / "src" / "assets" / "icon.ico")
 
 exe = EXE(
     pyz,
@@ -66,7 +67,7 @@ if _sys.platform == "darwin":
     app = BUNDLE(
         exe,
         name="CodeWidget.app",
-        icon=str(ROOT / "src" / "assets" / "icon.icns"),
+        icon=str(_icns) if _icns.exists() else None,
         bundle_identifier="com.sxwins.codewidget",
         info_plist={
             "LSUIElement": True,             # hide from Dock (tray-only app)

@@ -1,6 +1,6 @@
 # CodeWidget
 
-**[English]** | [日本語](README_ja.md)
+**[English]** | [日本語](docs/README_ja.md)
 
 A desktop attendance-code display tool for university teachers.
 

@@ -1,6 +1,6 @@
 # CodeWidget
 
-[English](README.md) | **[日本語]**
+[English](../README.md) | **[日本語]**
 
 大学教員向けデスクトップ出席コード表示ツールです。
 
@@ -12,7 +12,7 @@ CodeWidget は授業時間中にデスクトップへフローティングウィ
 ウィンドウは各コマの開始時刻に自動表示され、終了後に自動的に消えます。
 授業中の手動操作は不要です。
 
-![CodeWidget 表示例](docs/time_slot.png)
+![CodeWidget 表示例](time_slot.png)
 
 ## 主な機能
 
@@ -83,8 +83,8 @@ uv run pytest -v
 
 ## ライセンス
 
-[MIT](LICENSE)
+[MIT](../LICENSE)
 
 > 本ソフトウェアは [PySide6](https://doc.qt.io/qtforpython/) を使用しています。
 > PySide6 は [LGPL v3](https://www.gnu.org/licenses/lgpl-3.0.html) に基づきライセンスされています。
-> 詳細は [NOTICE](NOTICE) をご参照ください。
+> 詳細は [NOTICE](../NOTICE) をご参照ください。

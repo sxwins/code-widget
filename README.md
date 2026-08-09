@@ -33,16 +33,25 @@ disappears after class ends — no manual operation required during the lesson.
 
 ## Requirements
 
-- Windows 10 / 11  
-  *(macOS is supported when built from source on a Mac)*
-- No installer needed — single `.exe` file
+- Windows 10 / 11
+- macOS 12 Monterey or later
 
 ## Getting Started
+
+**Windows**
 
 1. Download `CodeWidget.exe` from [Releases](../../releases)
 2. Place it in any folder — a `config/` subdirectory is created automatically
    on first launch
 3. Open the settings dialog (tray icon → **Settings**) and configure your courses
+
+**macOS**
+
+1. Download `CodeWidget.dmg` from [Releases](../../releases)
+2. Open the `.dmg` and drag **CodeWidget.app** to your Applications folder
+3. Launch the app — a `config/` subdirectory is created in
+   `~/Library/Application Support/CodeWidget/` on first run
+4. Open the settings dialog (tray icon → **Settings**) and configure your courses
 
 ## Configuration Files
 
@@ -74,7 +83,7 @@ uv run pyinstaller CodeWidget.spec --clean
 > `$env:UV_PROJECT_ENVIRONMENT` is session-scoped and does not affect other
 > projects or the Docker environment.
 
-### macOS App Bundle
+### macOS DMG
 
 Run on a Mac (Xcode Command Line Tools required):
 
@@ -83,6 +92,7 @@ Run on a Mac (Xcode Command Line Tools required):
 uv sync --dev
 uv run pyinstaller CodeWidget.spec --clean
 # Output: dist/CodeWidget.app
+# Package into DMG with your preferred tool (e.g. create-dmg)
 ```
 
 ### Running Tests
